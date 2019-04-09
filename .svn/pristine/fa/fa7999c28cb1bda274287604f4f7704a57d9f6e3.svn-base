@@ -1,0 +1,272 @@
+const router = [
+  {
+    path: '/',
+    component: () => import('@/views/layout'),
+    children: [
+      {
+        name: 'main',
+        path: 'index',
+        component: () => import('@/views/main')
+      },
+      {
+        path: '/',
+        redirect: '/index'
+      }
+    ]
+  },
+  //   {
+  //     name: 'login',
+  //     path: '/login',
+  //     component: () => import('@/views/login')
+  //   },
+  //   {
+  //     name: 'setup',
+  //     path: '/setup',
+  //     component: () => import('@/views/setup')
+  //   },
+  {
+    path: '/managementSystem',
+    redirect: '/user'
+  },
+  {
+    name: 'managementSystem',
+    path: '/managementSystem',
+    component: () => import('@/views/managementSystem'),
+    children: [
+      {
+        name: '系统管理',
+        path: '/levelFirst',
+        redirect: '/user'
+      },
+      {
+        name: '用户管理',
+        path: '/user',
+        component: () => import('@/views/setup/userList'),
+        meta: {
+          breadcrumb: ['levelFirst', 'user']
+        }
+      },
+      {
+        name: '角色管理',
+        path: '/role',
+        component: () => import('@/views/setup/roleList'),
+        meta: {
+          breadcrumb: ['levelFirst', 'role']
+        }
+      },
+      {
+        name: '组织管理',
+        path: '/organize',
+        component: () => import('@/views/setup/organizeList'),
+        meta: {
+          breadcrumb: ['levelFirst', 'organize']
+        }
+      },
+      {
+        name: '分机管理',
+        path: '/extension',
+        component: () => import('@/views/setup/extensionList'),
+        meta: {
+          breadcrumb: ['levelFirst', 'extension']
+        }
+      },
+      {
+        name: '业务管理',
+        path: '/levelSecond',
+        redirect: '/intercom'
+      },
+      {
+        name: '对讲组管理',
+        path: '/intercom',
+        component: () => import('@/views/setup/intercomList'),
+        meta: {
+          breadcrumb: ['levelSecond', 'intercom']
+        }
+      },
+      {
+        name: '摄像头管理',
+        path: '/camera',
+        component: () => import('@/views/setup/cameraList'),
+        meta: {
+          breadcrumb: ['levelSecond', 'camera']
+        }
+      },
+      {
+        name: '通知管理',
+        path: '/notice',
+        component: () => import('@/views/setup/noticeList'),
+        meta: {
+          breadcrumb: ['levelSecond', 'notice']
+        }
+      },
+      //   {
+      //     name: '驱鸟队数据管理',
+      //     path: '/bird',
+      //     component: () => import('@/views/setup/birdList'),
+      //     meta: {
+      //       breadcrumb: ['levelSecond', 'bird']
+      //     }
+      //   },
+      //   {
+      //     name: '汽车连数据管理',
+      //     path: '/car',
+      //     component: () => import('@/views/setup/carList'),
+      //     meta: {
+      //       breadcrumb: ['levelSecond', 'car']
+      //     }
+      //   },
+      //   {
+      //     name: '器材数据管理',
+      //     path: '/equipment',
+      //     component: () => import('@/views/setup/equipmentList'),
+      //     meta: {
+      //       breadcrumb: ['levelSecond', 'equipment']
+      //     }
+      //   },
+      //   {
+      //     name: '灯数据管理',
+      //     path: '/lamp',
+      //     component: () => import('@/views/setup/lampList'),
+      //     meta: {
+      //       breadcrumb: ['levelSecond', 'lamp']
+      //     }
+      //   },
+      //   {
+      //     name: '军械数据管理',
+      //     path: '/ordnance',
+      //     component: () => import('@/views/setup/ordnanceList'),
+      //     meta: {
+      //       breadcrumb: ['levelSecond', 'ordnance']
+      //     }
+      //   },
+      //   {
+      //     name: '油库数据管理',
+      //     path: '/oilDepot',
+      //     component: () => import('@/views/setup/oilDepotList'),
+      //     meta: {
+      //       breadcrumb: ['levelSecond', 'oilDepot']
+      //     }
+      //   },
+      //   {
+      //     name: '道面数据管理',
+      //     path: '/road',
+      //     component: () => import('@/views/setup/roadList'),
+      //     meta: {
+      //       breadcrumb: ['levelSecond', 'road']
+      //     }
+      //   },
+      //   {
+      //     name: '警卫数据管理',
+      //     path: '/guard',
+      //     component: () => import('@/views/setup/guardList'),
+      //     meta: {
+      //       breadcrumb: ['levelSecond', 'guard']
+      //     }
+      //   },
+      //   {
+      //     name: '飞行保障管理',
+      //     path: '/flight',
+      //     component: () => import('@/views/setup/flightProtectList'),
+      //     meta: {
+      //       breadcrumb: ['levelSecond', 'flight']
+      //     }
+      //   },
+      {
+        name: '绑定装备管理',
+        path: '/bunding',
+        component: () => import('@/views/setup/bundingList'),
+        meta: {
+          breadcrumb: ['levelSecond', 'bunding']
+        }
+      },
+      {
+        name: '告警数据管理',
+        path: '/alarm',
+        component: () => import('@/views/setup/alarmList'),
+        meta: {
+          breadcrumb: ['levelSecond', 'alarm']
+        }
+      },
+      {
+        name: '签到数据管理',
+        path: '/signIn',
+        component: () => import('@/views/setup/signInList'),
+        meta: {
+          breadcrumb: ['levelSecond', 'signIn']
+        }
+      },
+      //   {
+      //     name: '添加小组数据管理',
+      //     path: '/addGroup',
+      //     component: () => import('@/views/setup/addGroupList'),
+      //     meta: {
+      //       breadcrumb: ['levelSecond', 'addGroup']
+      //     }
+      //   },
+      //   {
+      //     name: '飞行保障计划',
+      //     path: '/flightPlan',
+      //     component: () => import('@/views/setup/flightPlan'),
+      //     meta: {
+      //       breadcrumb: ['levelSecond', 'flightPlan']
+      //     }
+      //   },
+      {
+        name: '预案配置',
+        path: '/planConfig',
+        component: () => import('@/views/setup/planConfig'),
+        meta: {
+          breadcrumb: ['levelSecond', 'planConfig']
+        }
+      },
+      {
+        name: '飞行计划管理',
+        path: '/flightPlanMgt',
+        component: () => import('@/views/setup/flightPlanMgt'),
+        meta: {
+          breadcrumb: ['levelSecond', 'flightPlanMgt']
+        }
+      },
+      {
+        name: '保障计划管理',
+        path: '/flightSupportMgt',
+        component: () => import('@/views/setup/flightSupportMgt'),
+        meta: {
+          breadcrumb: ['levelSecond', 'flightSupportMgt']
+        }
+      },
+      {
+        name: '预案人员配置',
+        path: '/planStaffConfig',
+        component: () => import('@/views/setup/planStaffConfig'),
+        meta: {
+          breadcrumb: ['levelSecond', 'planStaffConfig']
+        }
+      },
+      {
+        name: '图片管理',
+        path: '/screenShort',
+        component: () => import('@/views/setup/screenShort'),
+        meta: {
+          breadcrumb: ['levelSecond', 'screenShort']
+        }
+      }
+    ]
+  },
+  {
+    name: 'weather',
+    path: '/weather',
+    component: () => import('@/views/weather')
+  },
+  {
+    name: '404',
+    path: '/404',
+    component: () => import('@/views/notFound')
+  },
+  {
+    path: '*',
+    redirect: '/404'
+  }
+];
+
+export default router;

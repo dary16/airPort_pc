@@ -1,0 +1,251 @@
+<template>
+  <div class="g-userWrap">
+    <v-search-title v-on:receiveBtnFn="btnsFn" v-bind:searchData="searchData"></v-search-title>
+    <div class="g-table">
+      <el-table :data="roleList" stripe>
+        <el-table-column align="center" prop="alermTitle" label="告警标题" width="200"></el-table-column>
+        <el-table-column align="center" prop="alermComment" label="告警内容" width=""></el-table-column>
+        <el-table-column align="center" prop="alermStatus" label="告警状态" width="150"></el-table-column>
+        <el-table-column align="center" prop="bak2" label="接收部门" width="300"></el-table-column>
+        <el-table-column align="center" label="操作" width="120">
+          <template slot-scope="scope">
+            <!-- <el-button v-on:click="editFn(scope.row)" type="text" size="small">编辑</el-button> -->
+            <el-button v-on:click="deleteFn(scope.row.alermId)" type="text" size="small">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
+    <el-pagination class="g-pagination " @current-change="changePages " :current-page="currentPage " :total="pageTotal " background layout="prev, pager, next "></el-pagination>
+    <v-pop-box id="organize" v-dialogDrag v-if="isShowBox" v-on:getBtnFn="getBtnsFn" v-on:save="saveFn" v-on:cancle="cancleFn" v-bind:popData="popData" v-bind:formData="editDate" v-bind:returnDeptsIds="returnDeptsIds"></v-pop-box>
+    <!--获取部门-->
+    <v-get-department v-if="isDepartment" v-on:checkedDepart="getDepartList" v-on:closeDepartFn="cancelDepartListFn"></v-get-department>
+  </div>
+</template>
+
+<script>
+  import { mapActions } from 'vuex';
+  export default {
+    data() {
+      return {
+        roleList: [],
+        currentPage: 1,
+        pageSize: 10,
+        pageTotal: 0,
+        searchData: {
+          'btnShow': [
+            { 'title': '查询', 'fn': 'checkFn' }
+            // 暂时去掉增加按钮，但是页面逻辑没有删除，去掉注释，按钮可正常使用
+            // { 'title': '增加', 'fn': 'addRoleFn' }
+          ],
+          'options': [{
+            'status': 2,
+            'title': '告警状态',
+            'placeholder': '请选择告警状态',
+            'val': 'alermStatus',
+            'list': [
+              {
+                value: '已处理',
+                label: '已处理'
+              }, {
+                value: '未处理',
+                label: '未处理'
+              }]
+          }],
+          defaultReq: {
+            alermComment: '测试默认'
+          }
+        },
+        isShowBox: false,
+        popData: {
+          'titleTotal': '新增',
+          'options': [{
+            'status': 1,
+            'title': '告警标题',
+            'placeholder': '请输入告警标题',
+            'val': 'alermTitle',
+            'visible': true
+          }, {
+            'status': 1,
+            'title': '告警内容',
+            'placeholder': '请输入告警内容',
+            'val': 'alermComment',
+            'visible': true
+          }, {
+            'status': 2,
+            'title': '告警状态',
+            'placeholder': '请输入告警状态',
+            'val': 'alermStatus',
+            'list': [
+              {
+                value: '已处理',
+                label: '已处理'
+              }, {
+                value: '未处理',
+                label: '未处理'
+              }]
+          }, {
+            'status': 11,
+            'title': '接受告警部门',
+            'placeholder': '请选择接受告警部门',
+            'val': 'orgId',
+            'fn': 'getDeptsFn'
+          }]
+        },
+        editDate: {},
+        ops: {},
+        filterData: {},
+        isDepartment: false,
+        deptsIds: [],
+        returnDeptsIds: []
+      }
+    },
+    mounted() {
+
+    },
+    created() {
+      this.getRoleList();
+    },
+    watch: {
+      deptsIds() {
+        if(this.deptsIds.length != 0) {
+          this.returnDeptsIds = JSON.parse(JSON.stringify(this.deptsIds));
+        }
+      }
+    },
+    methods: {
+      ...mapActions(['_getInfo']),
+      //获取列表
+      getRoleList() {
+        let pagination = {
+          "curPage": this.currentPage,
+          "pageSize": this.pageSize
+        };
+        if(JSON.stringify(this.filterData) != '{}') {
+          this.ops = { ...this.filterData, ...pagination }
+        } else {
+          this.ops = pagination;
+        }
+
+        this._getInfo({
+          ops: this.ops,
+          // api: 'alarmList',
+          api: 'getAlermList',
+          callback: res => {
+            this.roleList = res.rows;
+            this.pageTotal = res.records;
+          }
+        });
+      },
+      //删除角色
+      deleteFn(id) {
+        this.oMsgBox.confirm('确定删除当前列吗？', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning',
+          closeOnClickModal: false
+        }).then(() => {
+          this._getInfo({
+            ops: {
+              "ids": id,
+            },
+            api: 'delAlarm',
+            callback: res => {
+              this.message.success('删除成功！');
+              this.getRoleList();
+            }
+          });
+        }).catch(() => {
+
+        });
+      },
+      //编辑角色
+      editFn(val) {
+        this.isShowBox = true;
+        this.editDate = val;
+      },
+      //搜索按钮
+      btnsFn(info) {
+        this[info.fn](info.item);
+      },
+      //查询按钮
+      checkFn(item) {
+        this.currentPage = 1;
+        this.filterData = item;
+        this.getRoleList();
+      },
+      //增加按钮
+      addRoleFn() {
+        this.isShowBox = true;
+        this.editDate = {};
+      },
+      //翻页，改变页数方法
+      changePages(val) {
+        this.currentPage = val;
+        this.getRoleList();
+      },
+      //弹框保存按钮
+      saveFn(val) {
+
+        if(!val.alermComment) {
+          this.message.error('请输入告警内容！');
+          return false;
+        }
+        if(!val.alermTitle) {
+          this.message.error('请输入告警标题！');
+          return false;
+        }
+        var str = '';
+        this.deptsIds.forEach((item, index) => {
+          if(index != this.deptsIds.length - 1) {
+            str += item.id + ','
+          } else {
+            str += item.id
+          }
+        })
+        val.orgId = str;
+        let ops = JSON.parse(JSON.stringify(val));
+        this.isShowBox = false;
+        this._getInfo({
+          ops: val,
+          // api: 'addAlarm',
+          api: 'publishAlerm',
+          callback: res => {
+            if(val.alermId) {
+              this.message.success('编辑成功！');
+            } else {
+              this.message.success('新增成功！');
+            }
+            this.getRoleList();
+          }
+        });
+      },
+      //弹框取消按钮
+      cancleFn(val) {
+        this.isShowBox = val;
+      },
+      //获取子集传来的调用方法
+      getBtnsFn(fn) {
+        this[fn]();
+      },
+      //获取部门列表
+      getDepartList(list) {
+        this.isDepartment = false;
+        list.forEach(item => {
+          this.deptsIds.push({ 'id': item.id, 'label': item.label });
+        });
+      },
+      //调用获取部门的方法
+      getDeptsFn() {
+        this.deptsIds = [];
+        this.isDepartment = true;
+      },
+      //关闭部门
+      cancelDepartListFn() {
+        this.isDepartment = false;
+      }
+    },
+  };
+</script>
+
+<style scoped lang="less">
+</style>

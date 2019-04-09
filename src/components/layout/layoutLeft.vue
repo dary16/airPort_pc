@@ -1,0 +1,669 @@
+<template>
+    <div class="g-home-layout-left" v-bind:class="isShowMenu?'showMenu':'hideMenu'">
+        <div class="menu">
+            <h3 class="menuTitle">系统监测</h3>
+            <div class="foldMenu">
+                <!--飞行准备阶段-->
+                <dl>
+                    <dt v-on:click="foldFn(1)" v-bind:class="foldContent1?'bottomBg':'leftBg'" style="z-index: 100">飞行阶段</dt>
+                    <dd class="subClickList" v-bind:class="foldContent1?'flightOpen':'shrink'">
+                        <ul>
+                            <li v-bind:class="{curFlightLine:flightIndex==index}" v-for="(item,index) in flightLists" v-on:click="getStepFn(item,index,1)">{{item}}</li>
+                        </ul>
+                    </dd>
+                </dl>
+                <!--指挥调度-->
+                <dl>
+                    <dt v-on:click="foldFn(2)" v-bind:class="foldContent2?'bottomBg':'leftBg'" style="z-index: 98">指挥调度</dt>
+                    <dd v-bind:class="foldContent2?'dispatchOpen':'shrink'">
+                        <v-user-control v-bind:num="isShowFlight" v-on:curNum="getNumFn"></v-user-control>
+                    </dd>
+                </dl>
+                <!--通知公告-->
+                <dl>
+                    <dt v-on:click="foldFn(3)" v-bind:class="foldContent3?'bottomBg':'leftBg'" style="z-index: 96">通知公告</dt>
+                    <dd class="subUnclickList" v-bind:class="foldContent3?'noticeOpen':'shrink'">
+                        <ul>
+                            <li v-for="item in noticeList" v-on:click="infoNotice(item.id);">{{item.createTime.substr(11,5)}} {{item.noticeComment}}</li>
+                        </ul>
+                        <a class="addBtn" href="javascript:;" v-on:click="noticeCreateBtn">新建</a>
+                    </dd>
+                </dl>
+                <!--告警查看-->
+                <dl>
+                    <dt v-on:click="foldFn(4)" v-bind:class="foldContent4?'bottomBg':'leftBg'" style="z-index: 94">告警查看</dt>
+                    <dd class="subUnclickList" v-bind:class="foldContent4?'noticeOpen':'shrink'">
+                        <ul>
+                            <li v-for="item in alermList" v-on:click="alermInfoNotice(item.alermId);">{{item.createtime.substr(11,5)}} {{item.alermComment}}</li>
+                        </ul>
+                        <a class="addBtn" href="javascript:;" v-on:click="alarmCreateBtn">新建</a>
+                    </dd>
+                </dl>
+                <!--特情处置-->
+                <dl>
+                    <dt v-on:click="foldFn(5)" v-bind:class="foldContent5?'bottomBg':'leftBg'" style="z-index: 92">特情处置</dt>
+                    <dd v-bind:class="foldContent5?'flightOpen':'shrink'">
+                        <v-special-things v-bind:closeShow="isCloseShow"></v-special-things>
+                    </dd>
+                </dl>
+                <!--复盘评估-->
+                <dl>
+                    <dt v-on:click="foldFn(6)" v-bind:class="foldContent6?'bottomBg':'leftBg'" style="z-index: 90">复盘评估</dt>
+                    <dd v-bind:class="foldContent6?'flightOpen':'shrink'">
+                        <v-replay-list v-bind:closeShow="isCloseShow" v-on:closeLeft="flexBtnFn"></v-replay-list>
+                    </dd>
+                </dl>
+                <!--专业选择-->
+                <dl>
+                    <dt v-on:click="foldFn(7)" v-bind:class="foldContent7?'bottomBg':'leftBg'" style="z-index: 88">专业选择</dt>
+                    <dd v-bind:class="foldContent7?'flightOpen':'shrink'">
+                        <v-company-list v-bind:closeShow="isCloseShow"></v-company-list>
+                    </dd>
+                </dl>
+                <!--值班人员-->
+                <dl>
+                    <dt v-on:click="foldFn(8)" v-bind:class="foldContent8?'bottomBg':'leftBg'" style="z-index: 86">值班人员</dt>
+                    <dd class="subClickList" v-bind:class="foldContent8?'flightOpen':'shrink'">
+                        <ul>
+                            <li v-for="(item,index) in dutyLists" v-bind:class="{curFlightLine:flightIndex==index}" v-on:click="getDutyListFn((index+1),8)">{{item}}</li>
+                        </ul>
+                    </dd>
+                </dl>
+                <!--统计报表-->
+                <dl>
+                    <dt v-on:click="foldFn(9)" v-bind:class="foldContent9?'bottomBg':'leftBg'" style="z-index: 84">统计报表</dt>
+                    <dd class="subClickList" v-bind:class="foldContent9?'flightOpen':'shrink'">
+                        <ul>
+                            <li v-for="(item,index) in reportList" v-bind:class="{curFlightLine:flightIndex==index}" v-on:click="getReportListFn((index+1))">{{item}}</li>
+                        </ul>
+                    </dd>
+                </dl>
+            </div>
+        </div>
+        <div class="flexBtn" v-on:click="flexBtnFn">
+            <img v-if="isShowMenu" src="../../assets/left-arrow.png" />
+            <img v-else src="../../assets/right-arrow.png" />
+        </div>
+        <!--通知公告-->
+        <v-tree-list-box v-if="isShowNotice" v-dialogDrag v-on:cancle="cancelNoticeFn" v-on:refresh="refreshNoticeFn"></v-tree-list-box>
+        <!--告警查看-->
+        <v-alarm-pop v-if="isShowAlarm" v-on:saveClick="saveAlarmFn" v-on:cancelClick="cancelAlarmFn" v-on:refresh="refreshAlarmFn"></v-alarm-pop>
+        <!--飞行阶段-->
+        <v-flight-target v-bind:title="title" v-bind:flightContent="flightContent" v-if="isShowFlight==1" v-on:close="closeleftPopFn"></v-flight-target>
+        <v-info-box v-if="noticeItem" v-bind:popData="popData" v-on:cancle="cancleNoticeBox"></v-info-box>
+        <v-alerm-info-box v-if="alermItem" v-bind:alermPopData="alermPopData" v-on:cancle="cancleAlermBox"></v-alerm-info-box>
+        <!-- 单位值班弹窗 -->
+        <v-unit-duty v-if="isShowFlight==8" v-bind:dutyData="dutyData" v-on:cancle="closeleftPopFn"></v-unit-duty>
+        <!-- 部门签到 -->
+        <v-org-sign v-if="showSign" v-on:cancle="cancleSignBox"></v-org-sign>
+        <!--飞行计划-->
+        <v-flight-plan v-if="isShowFlightPlan" v-on:cancle="cancleFlightPlan"></v-flight-plan>
+        <!--实力统计-->
+        <v-strength-statistics v-if="isShowStrength" v-on:closeClick="closeStrengthFn"></v-strength-statistics>
+        <!-- 值班统计 -->
+        <v-duty-statistics v-if="isShowDuty" v-on:closeClick="closeDutyFn"></v-duty-statistics>
+        <!-- 飞行情况统计 -->
+        <v-flight-state v-if="isShowFlightState" v-on:closeClick="closeFlightStateFn"></v-flight-state>
+        <!--告警统计-->
+        <v-alarm-statistics v-if="isShowAlarmStatistics" v-on:closeClick="closeAlarmStatisticsFn"></v-alarm-statistics>
+        <!--通知公告统计-->
+        <v-notice-statistics v-if="isShowNoticeStatistics" v-on:closeClick="closeNoticeStatisticsFn"></v-notice-statistics>
+    </div>
+
+</template>
+
+<script>
+    import { mapMutations, mapActions, mapState } from 'vuex';
+    export default {
+        data() {
+            return {
+                isShowMenu: true,
+                flightList: [],
+                flightLists: ['飞行准备阶段1', '飞行准备阶段2', '飞行准备阶段3'],
+                detailList: [],
+                dutyLists: ['单位值班', '飞行计划', '部门签到'],
+                reportList: ['实力统计', '值班统计', '飞行情况统计', '告警统计', '通知公告统计'],
+                isShow: false,
+                flightIndex: -1,
+                flightCurId: '',
+                noticeList: [],
+                alermList: [],
+                isShowNotice: false,
+                isShowAlarm: false,
+                //左侧按钮
+                foldContent1: false,
+                foldContent2: false,
+                foldContent3: false,
+                foldContent4: false,
+                foldContent5: false,
+                foldContent6: false,
+                foldContent7: false,
+                foldContent8: false,
+                foldContent9: false,
+                isCloseShow: false,
+                orgBusDutyList: [],
+                arr1: [],
+                arr2: [],
+                arr3: [],
+                isShowFlight: 0,
+                title: '',
+                flightContent: [],
+                noticeItem: false,
+                alermItem: false,
+                popData: {
+                    titleTotal: '通知详情',
+                    popContent: {}
+                },
+                alermPopData: {
+                    titleTotal: '告警详情',
+                    popContent: {
+                    }
+                },
+                dutyData: {},
+                showSign: false,
+                isShowFlightPlan: false,
+                isShowStrength: false,
+                isShowDuty: false,
+                isShowFlightState: false,
+                isShowAlarmStatistics: false,
+                isShowNoticeStatistics: false
+            };
+        },
+        computed: {
+            ...mapState(['getRectangle'])
+        },
+        watch: {
+            getRectangle() {
+                if(this.getRectangle.length > 0) {
+                    this.openDispatch();
+                }
+            }
+        },
+        created() {
+            //默认飞行计划方法
+            this.getPlanList();
+            //通知公告
+            this.getNoticeFn();
+            //告警查看
+            this.getAlarmFn();
+            //值班人员
+            this.getOrgBusDutyFn();
+        },
+        methods: {
+            ...mapActions(['_getInfo']),
+            ...mapMutations(['_setLeftMenuBoolean']),
+            //左侧菜单面板显示或隐藏
+            flexBtnFn() {
+                if(this.isShowMenu) {
+                    this.isShowMenu = false;
+                } else {
+                    this.isShowMenu = true;
+                }
+                this._setLeftMenuBoolean(this.isShowMenu)
+            },
+            //圈选之后，选中人员，打开左侧菜单的指挥调度
+            openDispatch() {
+                for(var i = 1; i < 10; i++) {
+                    this['foldContent' + i] = false;
+                }
+                this.foldContent2 = true;
+            },
+            //左侧菜单title点击事件
+            foldFn(index) {
+                for(var i = 1; i < 10; i++) {
+                    if(i == index) {
+                        continue;
+                    }
+                    this['foldContent' + i] = false;
+                }
+                if(this['foldContent' + index]) {
+                    this['foldContent' + index] = false;
+                    this.isCloseShow = true;
+                } else {
+                    this['foldContent' + index] = true;
+                    this.isCloseShow = false;
+                }
+                this.flightIndex = -1;
+                this.isShowFlight = 0;
+            },
+            //获取飞行准备阶段列表
+            getPlanList() {
+                this._getInfo({
+                    ops: {},
+                    api: 'getFlightPlan',
+                    callback: res => {
+                        res.forEach((item) => {
+                            if(item.flightType == '飞行准备阶段1') {
+                                this.arr1.push(item);
+                            } else if(item.flightType == '飞行准备阶段2') {
+                                this.arr2.push(item);
+                            } else if(item.flightType == '飞行准备阶段3') {
+                                this.arr3.push(item);
+                            } else {
+                                return false;
+                            }
+                        })
+                        //this.flightList = res.rows;
+                    }
+                });
+            },
+            //飞行阶段
+            getStepFn(val, index, num) {
+                this.title = val;
+                this.flightIndex = index;
+                this.flightContent = this['arr' + (index + 1)];
+                this.isShowFlight = num;
+            },
+            //值班人员
+            getDutyListFn(index, num) {
+                this.flightIndex = index - 1;
+                this.isShowFlight = 0;
+                if(index == 1) {
+                    //单位值班
+                    this.isShowFlight = num;
+                } else if(index == 2) {
+                    // 飞行计划
+                    this.isShowFlightPlan = true;
+                } else if(index == 3) {
+                    //部门签到
+                    this.showSign = true;
+                }
+            },
+            //统计报表
+            getReportListFn(index) {
+                this.flightIndex = index - 1;
+                if(index == 1) {
+                    //'实力统计'
+                    this.isShowStrength = true;
+                } else if(index == 2) {
+                    //'值班统计'
+                    this.isShowDuty = true;
+                } else if(index == 3) {
+                    //'飞行情况统计'
+                    this.isShowFlightState = true;
+                } else if(index == 4) {
+                    //'告警统计'
+                    this.isShowAlarmStatistics = true;
+                } else {
+                    // '通知公告统计'
+                    this.isShowNoticeStatistics = true;
+                }
+            },
+            //关闭实力统计
+            closeStrengthFn() {
+                this.isShowStrength = false;
+            },
+            //关闭值班统计
+            closeDutyFn() {
+                this.isShowDuty = false;
+            },
+            closeFlightStateFn() {
+                this.isShowFlightState = false;
+            },
+            //关闭飞行阶段弹框
+            closeFn() {
+                this.isShow = false;
+            },
+            //通知公告
+            getNoticeFn() {
+                this._getInfo({
+                    ops: {
+                        "curPage": '1',
+                        "pageSize": '6'
+                    },
+                    api: 'getNoticeList2',
+                    callback: res => {
+                        this.noticeList = res.rows;
+                    }
+                });
+            },
+            //通知详情
+            infoNotice(id) {
+                this._getInfo({
+                    ops: {
+                        id: id
+                    },
+                    api: 'infoNotice',
+                    callback: res => {
+                        this.popData.popContent = res;
+                        this.noticeItem = true;
+                    }
+                });
+            },
+            //关闭详情
+            cancleNoticeBox() {
+                this.noticeItem = false;
+            },
+            refreshNoticeFn() {
+                this.getNoticeFn();
+            },
+            //告警查看
+            getAlarmFn() {
+                this._getInfo({
+                    ops: {
+                        "curPage": '1',
+                        "pageSize": '6'
+                    },
+                    api: 'getAlermList',
+                    callback: res => {
+                        this.alermList = res.rows;
+                    }
+                });
+            },
+            //告警详情
+            alermInfoNotice(id) {
+                this._getInfo({
+                    api: 'infoAlarm',
+                    ops: {
+                        id: id
+                    },
+                    callback: res => {
+                        this.alermPopData.popContent = res;
+                        this.alermItem = true;
+                    }
+                });
+            },
+            //关闭详情
+            cancleAlermBox() {
+                this.alermItem = false;
+            },
+            //刷新告警列表
+            refreshAlarmFn() {
+                this.getAlarmFn();
+            },
+            //通知公告新建
+            noticeCreateBtn() {
+                this.isShowNotice = true;
+            },
+            //关闭通知公告弹框
+            cancelNoticeFn() {
+                this.isShowNotice = false;
+            },
+            //新建通知成功
+            saveNoticeFn() {
+                this.getNoticeFn();
+                this.isShowNotice = false;
+            },
+            //告警查看新建
+            alarmCreateBtn() {
+                this.isShowAlarm = true;
+            },
+            //关闭警告查询弹框
+            cancelAlarmFn() {
+                this.isShowAlarm = false;
+            },
+            //新建告警成功
+            saveAlarmFn() {
+                this.getAlarmFn();
+                this.isShowAlarm = false;
+            },
+            //值班人员
+            getOrgBusDutyFn() {
+                this._getInfo({
+                    ops: {},
+                    api: 'getOrgBusDuty',
+                    callback: res => {
+                        // this.orgBusDutyList = res;
+                        this.dutyData = res;
+                    }
+                });
+            },
+            //关闭左侧弹出框
+            closeleftPopFn() {
+                this.isShowFlight = 0;
+            },
+            cancleSignBox() {
+                this.showSign = false;
+            },
+            //关闭飞行计划
+            cancleFlightPlan() {
+                this.isShowFlightPlan = false;
+            },
+            getNumFn(num) {
+                this.isShowFlight = num;
+            },
+            //关闭公告统计
+            closeAlarmStatisticsFn() {
+                this.isShowAlarmStatistics = false;
+            },
+            //关闭通知公告统计
+            closeNoticeStatisticsFn() {
+                this.isShowNoticeStatistics = false
+            }
+        }
+    }
+</script>
+<style scoped lang="less">
+    .menu {
+        position: absolute;
+        top: 0px;
+        width: 298px;
+        height: 100%;
+        background: linear-gradient(rgba(0, 42, 74, 0.9), rgba(53, 106, 146, 0.78));
+        // box-shadow: 2px 0 6px rgba(0, 0, 0, 0.45);
+        .menuTitle {
+            height: 38px;
+            line-height: 38px;
+            color: #fff;
+            font-size: 20px;
+            padding-left: 12px;
+            background: linear-gradient(to right, #004175, #0f6cb2);
+            box-shadow: 0px 3px 17px #000000;
+        }
+        .foldMenu {
+            padding: 14px 7px 0px 5px;
+            dl {
+                position: relative;
+                padding-top: 51px;
+                dt {
+                    position: absolute;
+                    width: 100%;
+                    top: 0;
+                    left: 0;
+                    color: #fff;
+                    font-size: 18px;
+                    font-weight: normal;
+                    text-align: center;
+                    height: 51px;
+                    line-height: 51px;
+                    box-shadow: 0px 2px 20px #000000;
+                    margin-bottom: 10px;
+                    cursor: pointer;
+                    user-select: none;
+                }
+                .leftBg {
+                    transition-property: 'background';
+                    transition-duration: 100ms;
+                    background: url(../../assets/right-arrow-solid.png) no-repeat 23px center #003b68;
+                }
+                .bottomBg {
+                    transition-property: 'background';
+                    transition-duration: 100ms;
+                    background: url(../../assets/bottom-arrow-solid.png) no-repeat 23px center #003b68;
+                }
+                .shrink {
+                    height: 0;
+                    overflow: hidden;
+                    transition-property: 'height,color';
+                    transition-duration: 300ms;
+                }
+                .flightOpen {
+                    height: 342px;
+                    transition-property: 'height,color';
+                    transition-duration: 300ms;
+                }
+                .subUnclickList {
+                    ul {
+                        margin: 13px;
+                        overflow-y: auto;
+                        height: 288px;
+                        li {
+                            margin-bottom: 6px;
+                            height: 42px;
+                            line-height: 42px;
+                            font-size: 18px;
+                            color: #e0e0e0;
+                            border-radius: 5px;
+                            padding: 0 20px;
+                            cursor: pointer;
+                            background: linear-gradient(to right, #0e6eb8, #2b94d1);
+                            background: rgba(255, 255, 255, 0.12);
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            white-space: nowrap;
+                        }
+                    }
+                    a.addBtn {
+                        display: block;
+                        text-align: center;
+                        color: #fff;
+                        width: 85px;
+                        height: 34px;
+                        line-height: 34px;
+                        border-radius: 10px;
+                        margin: 0px auto;
+                        margin-top: -6px;
+                        background: #2a70a4;
+                        box-shadow: 2px 3px 2px #619ee2 inset, 0px 3px 8px rgba(31, 79, 133, 0.8);
+                    }
+                }
+                .noticeOpen {
+                    height: 344px;
+                    transition-property: 'height,color';
+                    transition-duration: 300ms;
+                }
+                .dispatchOpen {
+                    height: 356px;
+                    transition-property: 'height,color';
+                    transition-duration: 300ms;
+                }
+            }
+        }
+    }
+    .showMenu {
+        left: 0;
+        transition: left 500ms;
+    }
+    .hideMenu {
+        left: -298px;
+        transition: left 500ms;
+    }
+    .flexBtn {
+        position: absolute;
+        width: 25px;
+        text-align: center;
+        height: 406px;
+        line-height: 406px;
+        top: 50%;
+        left: 298px;
+        margin-top: -203px;
+        // z-index: 10001;
+        cursor: pointer;
+        // background: linear-gradient(90deg, rgba(43, 100, 142, 1), rgba(0, 85, 153, 1));
+        box-shadow: 1px 2px 5px 1px rgba(43, 100, 142, 0.8), 1px 2px 0px 1px rgba(36, 123, 221, 0.6);
+        background: rgba(43, 100, 142, 0.8);
+        border-top-right-radius: 10px;
+        border-bottom-right-radius: 10px;
+    }
+    // .mask {
+    //     position: fixed;
+    //     width: 100%;
+    //     height: 100%;
+    //     top: 0;
+    //     left: 0;
+    //     z-index: 9998;
+    //     background: rgba(0, 0, 0, 0.5);
+    //     ul.step {
+    //         position: fixed;
+    //         z-index: 9999;
+    //         width: 420px;
+    //         height: 320px;
+    //         left: 0;
+    //         top: 0;
+    //         right: 0;
+    //         bottom: 0;
+    //         margin: auto;
+    //         background: #fff;
+    //         border-radius: 10px;
+    //         padding-top: 20px;
+    //         li {
+    //             line-height: 32px;
+    //             margin-left: 20px;
+    //             overflow: hidden;
+    //             text-overflow: ellipsis;
+    //             white-space: nowrap;
+    //             display: block;
+    //         }
+    //     }
+    //     div.more {
+    //         position: fixed;
+    //         z-index: 1999;
+    //         width: 70%;
+    //         height: 560px;
+    //         left: 0;
+    //         top: 0;
+    //         right: 0;
+    //         bottom: 0;
+    //         margin: auto;
+    //         background: #fff;
+    //         border-radius: 10px;
+    //         padding-top: 20px;
+    //         h3 {
+    //             text-align: right;
+    //             a {
+    //                 margin-right: 20px;
+    //             }
+    //         }
+    //         ul {
+    //             height: 420px;
+    //             overflow-y: auto;
+    //             li {
+    //                 line-height: 32px;
+    //                 margin-left: 20px;
+    //                 overflow: hidden;
+    //                 text-overflow: ellipsis;
+    //                 white-space: nowrap;
+    //                 display: block;
+    //                 span {
+    //                     float: left;
+    //                     overflow: hidden;
+    //                     text-overflow: ellipsis;
+    //                     white-space: nowrap;
+    //                 }
+    //                 span:nth-child(1),
+    //                 span:nth-child(2) {
+    //                     width: 10%;
+    //                 }
+    //                 span:nth-child(3) {
+    //                     width: 60%;
+    //                 }
+    //                 span:nth-child(4) {
+    //                     width: 20%;
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
+</style>
+<style>
+    .el-icon-arrow-right {
+        color: #19587d !important;
+    }
+
+    .el-collapse-item {
+        box-shadow: 0px -6px 8px 1px rgba(0, 0, 0, 0.42) !important;
+    }
+    .el-collapse-item__header {
+        background: #003b68 !important;
+        color: #e0e0e0 !important;
+        font-size: 18px !important;
+        text-align: center !important;
+        border-bottom: none !important;
+    }
+    .el-collapse-item__content {
+        background: linear-gradient(180deg, rgba(0, 42, 74, 0.9), rgba(53, 106, 146, 0.78)) !important;
+        box-shadow: 1px 2px 5px 1px rgba(0, 0, 0, 0.45) !important;
+        padding-bottom: 0 !important;
+    }
+</style>
+

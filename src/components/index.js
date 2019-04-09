@@ -1,0 +1,216 @@
+// 注册组件 -- 在 main.js 引入后可以全局使用而不用多次引用
+// 注意：使用标签时前缀需要加 v- 以示区别
+
+//头部
+import layoutTop from './layout/layoutTop';
+//左侧menu
+import layoutLeft from './layout/layoutLeft';
+//飞行阶段弹框
+import flightPhase from './layout/flightPhase';
+//复盘评估
+import replayList from './layout/replayList';
+//专业选择
+import companyList from './layout/companyList';
+//通知公告
+import noticePop from './layout/noticePop';
+//告警查询
+import alarmPop from './layout/alarmPop';
+//特情处置
+import specialThings from './layout/specialThings';
+//指挥调度
+import userControl from './layout/userControl';
+//左侧对讲组
+import intercomGroup from './layout/intercomGroup';
+//固定监控视频
+import videoGroup from './layout/videoGroup';
+//飞行监控
+import flightTarget from './layout/flightTarget';
+
+//左侧数据采集-搜索
+import searchBtn from './data/searchBtn';
+//左侧数据采集-列表
+import showList from './data/showList';
+
+//地图
+import mapShow from './mapShow';
+//标记点点击弹出对话框
+import markerDialog from './markerDialog';
+
+//搜索
+import searchTitle from './setup/searchTitle';
+//弹窗
+import popBox from './setup/popBox';
+
+//语音
+import voiceOper from './operation/voiceOper';
+//视频
+import videoOper from './operation/videoOper';
+//对讲组
+import intercomOper from './operation/intercomOper';
+
+//即时信息
+import msgOper from './operation/msgOper';
+
+//选择人员弹出框
+import selectionStaff from './selectionStaff';
+//选择人员
+import getUser from './getUser';
+//选择部门
+import getDepartment from './getDepartment';
+
+//即时信息发送信息记录
+import messageBox from './messageBox';
+
+//天气预报
+import showWeather from './weather/showWeather';
+
+//首页下侧tab选项卡
+import bottomTab from './bottomTab';
+
+//场务专业
+import fieldService from './part/fieldService';
+//汽车专业
+import carField from './part/carFieldList';
+//警卫专业
+import guardField from './part/guardFieldList';
+//四站专业
+import szlField from './part/szlFieldList';
+//油料专业
+import oilField from './part/oilFieldList';
+//航材专业
+import materialField from './part/materialFieldList';
+//军械专业
+import weaponField from './part/weaponFieldList';
+//气象专业
+import weatherField from './part/weatherFieldList';
+//值班车辆
+import getDutyVehicle from './getDutyVehicle';
+
+//管理系统-头部
+import manageHeader from './managementSystem/manageHeader';
+//管理系统-左侧菜单
+import manageLeft from './managementSystem/manageLeft';
+import manageMenu from './managementSystem/manageMenu';
+//管理系统-面包屑
+import breadcrumb from './managementSystem/breadcrumb';
+//复盘 搜索
+//搜索
+import searchHeader from './layout/searchHeader';
+import noticeBox from './setup/noticeBox';
+import treeListBox from './setup/treeListBox';
+//通知详情
+import infoBox from './setup/infoBox';
+//告警详情
+import alermInfoBox from './setup/alermInfoBox';
+//拦阻网
+import netItem from './setup/netItem';
+//拦阻网详情
+import netInfoBox from './setup/netInfoBox';
+//信息详情
+import msgBox from './setup/msgBox';
+//地图上点击人员信息列表
+import userInfo from './layout/userInfo';
+//地图附近的人，人员列表
+import nearUserInfo from './layout/nearUserInfo';
+//单位值班
+import unitDuty from './layout/unitDuty';
+//部门签到
+import orgSign from './setup/orgSign';
+//飞行计划
+import flightPlan from './layout/flightPlan';
+//预案编辑
+import planPop from './layout/planPop';
+//部门签到列表
+import signHistory from './setup/signHistory';
+//部门签到详情
+import orgSignInfo from './setup/orgSignInfo';
+//地图工具栏
+import toolbar from './toolbar';
+//实力统计
+import strengthStatistics from './layout/strengthStatistics';
+//值班统计
+import dutyStatistics from './layout/dutyStatistics';
+//飞行情况统计
+import flightState from './layout/flightState';
+//highChart
+import chart from './chart';
+//告警统计
+import alarmStatistics from './layout/alarmStatistics';
+//通知公告统计
+import noticeStatistics from './layout/noticeStatistics';
+//饼图
+import pieChart from './pieChart';
+//地图 图层
+import mapLayer from './layout/mapLayer';
+//图片弹窗
+import picPop from './setup/picPop';
+
+export default {
+  layoutTop,
+  layoutLeft,
+  flightPhase,
+  replayList,
+  companyList,
+  noticePop,
+  alarmPop,
+  specialThings,
+  userControl,
+  intercomGroup,
+  flightTarget,
+  videoGroup,
+  searchBtn,
+  showList,
+  mapShow,
+  markerDialog,
+  searchTitle,
+  popBox,
+  voiceOper,
+  videoOper,
+  intercomOper,
+  msgOper,
+  selectionStaff,
+  messageBox,
+  showWeather,
+  bottomTab,
+  fieldService,
+  carField,
+  guardField,
+  szlField,
+  oilField,
+  materialField,
+  weaponField,
+  weatherField,
+  getUser,
+  getDepartment,
+  getDutyVehicle,
+  manageHeader,
+  manageLeft,
+  manageMenu,
+  breadcrumb,
+  searchHeader,
+  noticeBox,
+  treeListBox,
+  infoBox,
+  alermInfoBox,
+  userInfo,
+  netInfoBox,
+  msgBox,
+  netItem,
+  nearUserInfo,
+  unitDuty,
+  orgSign,
+  flightPlan,
+  planPop,
+  signHistory,
+  toolbar,
+  orgSignInfo,
+  dutyStatistics,
+  flightState,
+  strengthStatistics,
+  chart,
+  alarmStatistics,
+  noticeStatistics,
+  pieChart,
+  mapLayer,
+  picPop
+};

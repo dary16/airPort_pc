@@ -1,0 +1,252 @@
+<template>
+  <div class="addWeather weatherCover">
+    <div class="head">新增天气</div>
+    <div class="eachList">
+      <ul class="title clearfix">
+        <li>天气：</li>
+        <li>温度：</li>
+        <li>风向：</li>
+        <li>风力：</li>
+        <li>云量：</li>
+        <li>标题：</li>
+        <li>时间段：</li>
+        <li>内容：</li>
+        <li>气压：</li>
+        <li>湿度：</li>
+        <li>二氧化硫含量：</li>
+        <li>二氧化碳含量：</li>
+        <li>PM2.5：</li>
+        <li>PM10：</li>
+        <li>
+          <a v-on:click="addSubFn()" href="javascript:;">
+            <img src="../assets/weather/add.png" alt="">
+                    </a>
+        </li>
+      </ul>
+      <ul class="list clearfix" v-for="(item,index) in show">
+        <li>
+          <el-input v-model="item.weather"></el-input>
+        </li>
+        <li>
+          <el-input v-model="item.temperature"></el-input>
+        </li>
+        <li>
+          <el-input v-model="item.windDirection"></el-input>
+        </li>
+        <li>
+          <el-input v-model="item.windPower"></el-input>
+        </li>
+        <li>
+          <el-input v-model="item.cloudAmount"></el-input>
+        </li>
+        <li>
+          <el-input v-model="item.title"></el-input>
+        </li>
+        <li>
+          <el-input v-model="item.timestemp"></el-input>
+        </li>
+        <li>
+          <el-input v-model="item.comment"></el-input>
+        </li>
+        <li>
+          <el-input v-model="item.airPressure"></el-input>
+        </li>
+        <li>
+          <el-input v-model="item.wetness"></el-input>
+        </li>
+        <li>
+          <el-input v-model="item.soo"></el-input>
+        </li>
+        <li>
+          <el-input v-model="item.coo"></el-input>
+        </li>
+        <li>
+          <el-input v-model="item.pm25"></el-input>
+        </li>
+        <li>
+          <el-input v-model="item.pm10"></el-input>
+        </li>
+        <li>
+          <a href="javascript:;"></a>
+        </li>
+      </ul>
+    </div>
+    <div class="btnStyle">
+      <a href="javascript:;" class="newBtn" v-on:click="addWeatherFn();">确定</a>
+    </div>
+  </div>
+</template>
+
+<script>
+  import { mapActions, mapState } from 'vuex';
+  export default {
+    data() {
+      return {
+        form: {
+        },
+        tempForm: {},
+        dataGroup: [],
+        listTeam: [],
+        show: [],
+      };
+    },
+    created() {
+
+    },
+    watch: {},
+    mounted() {
+      this.show.push({
+        'title': '',
+        'temperature': '',
+        'weather': '',
+        'windDirection': '',
+        'windPower': '',
+        'cloudAmount': '',
+        'timestemp': '',
+        'comment': '',
+        'airPressure': '',
+        'wetness': '',
+        'soo': '',
+        'coo': '',
+        'pm25': '',
+        'pm10': ''
+      });
+    },
+    methods: {
+      ...mapActions(['_getInfo']),
+      addSubFn() {
+        this.show.push({
+          'title': '',
+          'temperature': '',
+          'weather': '',
+          'windDirection': '',
+          'windPower': '',
+          'cloudAmount': '',
+          'timestemp': '',
+          'comment': '',
+          'airPressure': '',
+          'wetness': '',
+          'soo': '',
+          'coo': '',
+          'pm25': '',
+          'pm10': ''
+        });
+      },
+      addWeatherFn() {
+        // if(!this.form.title && this.show.length == 0) {
+        //   this.message.error('请输入标题！');
+        //   return false;
+        // } else if(this.form.title) {
+        //   this.dataGroup.push(this.form);
+        // }
+        this.show.forEach((item) => {
+          console.log(item.weather);
+          if(!item.weather) {
+            this.message.error('请输入天气！');
+            return false;
+          }
+          if(!item.temperature) {
+            this.message.error('请输入温度！');
+            return false;
+          }
+          if(!item.windDirection) {
+            this.message.error('请输入风向！');
+            return false;
+          }
+          if(!item.windPower) {
+            this.message.error('请输入风力！');
+            return false;
+          }
+        });
+        this._getInfo({
+          ops: {
+            'content': this.show
+          },
+          api: 'weatherAdd',
+          callback: res => {
+            //this.dataGroup = [];
+            this.message.success('新建成功！');
+            //this.$emit('closeFn')
+            this.$router.push('index');
+          }
+        });
+      }
+    }
+  };
+</script>
+
+<style scoped lang="less">
+  .addWeather {
+    background: #5389c4;
+    height: 100%;
+    .head {
+      font-weight: 400;
+      color: rgba(224, 224, 224, 1);
+      text-align: left;
+      font-size: 24px;
+      line-height: 60px;
+      cursor: pointer;
+      z-index: 1001;
+      width: 100%;
+      height: 60px;
+      padding-left: 30px;
+      background: linear-gradient(
+        90deg,
+        rgba(0, 65, 117, 1),
+        rgba(15, 108, 178, 1)
+      );
+      box-shadow: 0px 2px 5px 1px rgba(0, 0, 0, 0.8);
+    }
+    .eachList {
+      color: #e0e0e0;
+      background: #5389c4;
+      padding-bottom: 30px;
+      .title li {
+        width: 6.6%;
+        float: left;
+        text-align: center;
+        font-size: 22px;
+        height: 50px;
+        line-height: 50px;
+      }
+      .list {
+        li {
+          width: 6.6%;
+          float: left;
+          padding: 10px;
+        }
+        li:last-child {
+          text-align: center;
+          line-height: 45px;
+        }
+      }
+    }
+  }
+
+  .btnStyle {
+    text-align: center;
+    padding: 20px;
+    border-top: 2px solid #3f6794;
+  }
+  .newBtn {
+    // background: linear-gradient(0deg, rgba(43, 127, 191, 1), rgba(46, 137, 205, 0.63));
+    background: url(../assets/weather/btn_common.png) no-repeat;
+    width: 87px;
+    height: 33px;
+    background-size: 100% 100%;
+    color: #e0e0e0;
+    padding: 11px 23px 9px 24px;
+  }
+</style>
+<style lang="less">
+  .weatherCover {
+    .el-input__inner {
+      background-color: #3a6089 !important;
+      color: #e0e0e0 !important;
+      border: 1px solid rgba(0, 0, 0, 0.06) !important;
+      box-shadow: 0px 1px 1px 0px rgba(255, 255, 255, 0.5),
+        0px 1px 3px 0px rgba(0, 0, 0, 0.4) !important;
+    }
+  }
+</style>
+

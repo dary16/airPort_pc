@@ -1,0 +1,1148 @@
+<template>
+  <div>
+    <div class="subClickList">
+      <ul>
+        <li v-on:click="curTitleFn(1)" v-bind:class="{curFlightLine:replayIndex==1}">
+          （1）人员和车辆轨迹回放；
+          <img v-if="replayIndex==1" src="../../assets/after.png" />
+          <img v-else src="../../assets/before.png" />
+        </li>
+        <li v-on:click="curTitleFn(2)" v-bind:class="{curFlightLine:replayIndex==2}">
+          （2）视频和语音通话记录回放；
+          <img v-if="replayIndex==2" src="../../assets/after.png" />
+          <img v-else src="../../assets/before.png" />
+        </li>
+        <li v-on:click="curTitleFn(3)" v-bind:class="{curFlightLine:replayIndex==3}">
+          （3）历史数据指令回放；
+          <img v-if="replayIndex==3" src="../../assets/after.png" />
+          <img v-else src="../../assets/before.png" />
+        </li>
+        <li v-on:click="curTitleFn(4)" v-bind:class="{curFlightLine:replayIndex==4}">
+          （4）人员和主要装设备工作状态的展示和查询；
+          <img v-if="replayIndex==4" src="../../assets/after.png" />
+          <img v-else src="../../assets/before.png" />
+        </li>
+        <li v-on:click="curTitleFn(5)" v-bind:class="{curFlightLine:replayIndex==5}">
+          （5）自动生成复盘图片。
+          <img v-if="replayIndex==5" src="../../assets/after.png" />
+          <img v-else src="../../assets/before.png" />
+        </li>
+        <li v-on:click="curTitleFn(6)" v-bind:class="{curFlightLine:replayIndex==6}">
+          （6）飞机飞出状态
+          <img v-if="replayIndex==5" src="../../assets/after.png" />
+          <img v-else src="../../assets/before.png" />
+        </li>
+          <!-- <li v-on:click="getReplayPicFn">（5）、自动生成复盘图片。</li> -->
+      </ul>
+    </div>
+    <div class="mask" v-if="isShowTrajectory">
+      <div class="listTrajectory">
+        <div class="popHeader">
+          <h3>轨迹回放</h3>
+          <i class="el-icon-close" v-on:click="closeUserFn"></i>
+        </div>
+        <div class="content">
+          <v-search-header v-on:receiveBtnFn="btnsFn" v-bind:searchData="trajectoryMsg"></v-search-header>
+          <!-- <ul>
+            <li class="msgLi">
+              <span>类型</span>
+              <span>用户名</span>
+              <span>用户id</span>
+              <span>操作</span>
+            </li>
+            <li v-for="item in userList" class="msgLi">
+              <span>&nbsp;{{item.type}}</span>
+              <span>{{item.user}}</span>
+              <span>{{item.userId}}</span>
+              <span><a href="javascript:;" v-on:click="trajectoryBackFn(item.userId)">轨迹回放</a></span>
+            </li>
+          </ul> -->
+        </div>
+      </div>
+    </div>
+    <!-- 音频视频 -->
+    <div class="mask" v-if="isShowReplay">
+      <div class="more">
+        <div class="popHeader">
+          <h3>复盘评估</h3>
+          <i class="el-icon-close" v-on:click="closeReplayFn"></i>
+        </div>
+        <div class="content">
+          <v-search-header v-on:receiveBtnFn="btnsFn" v-bind:searchData="searchData"></v-search-header>
+          <ul>
+            <li>
+              <span>被叫姓名</span>
+              <span>主叫姓名</span>
+              <span>被叫SIP号</span>
+              <span>主叫SIP号</span>
+              <span>文件名称</span>
+              <span>时间</span>
+            </li>
+            <li v-for="item in voiceList">
+              <span>&nbsp;{{item.calleeName}}</span>
+              <span>{{item.callerName}}</span>
+              <span>{{item.callee}}</span>
+              <span>{{item.caller}}</span>
+              <span style="cursor: pointer" v-on:click="getPlayFn(item.filePath)">{{item.fileName}}</span>
+              <span>{{item.timeName}}</span>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+    <!--播放音频-->
+    <div class="isPlayAudio" v-if="audioUrl">
+      <div class="audioWarp">
+        <div class="audvHeader">
+          <h3>音频播放</h3>
+          <i class="el-icon-close" v-on:click="closeAudioFn"></i>
+        </div>
+        <div class="audioContent">
+          <audio v-bind:src="audioUrl" controls="controls" autoplay="autoplay">
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+
+      </div>
+      <!-- <a href="javascript:;" v-on:click="closeAudioFn">关闭</a> -->
+    </div>
+    <!--播放视频-->
+    <div class="isPlayVideo" v-if="videoUrl">
+      <div class="videoWrap">
+        <div class="audvHeader">
+          <h3>视频播放</h3>
+          <i class="el-icon-close" v-on:click="closeVideoFn"></i>
+        </div>
+        <div class="videoContent">
+          <video width="360" height="240" controls autoplay>
+            <source :src="videoUrl" type="video/ogg">
+            <source :src="videoUrl" type="video/mp4">
+            <source :src="videoUrl" type="video/webm">
+            <object :data="videoUrl" width="320" height="240">
+              <embed width="360" height="240" :src="videoUrl">
+                        </object>
+          </video>
+        </div>
+      </div>
+
+      <!-- <a href="javascript:;" v-on:click="closeVideoFn">关闭</a> -->
+    </div>
+
+    <!--短信-->
+    <div class="mask" v-if="isShowMsg">
+      <div class="more">
+        <div class="popHeader">
+          <h3>复盘评估</h3>
+          <i class="el-icon-close" v-on:click="closeMsgFn"></i>
+        </div>
+        <div class="content">
+          <v-search-header v-on:receiveBtnFn="btnsFn" v-bind:searchData="searchDataMsg"></v-search-header>
+          <ul>
+            <li class="msgLi">
+              <span>被叫SIP号</span>
+              <span>主叫SIP号</span>
+              <span>短信内容</span>
+              <span>时间</span>
+            </li>
+            <li v-for="item in msgList" class="msgLi">
+              <span>&nbsp;{{item.callee}}</span>
+              <span>{{item.caller}}</span>
+              <span class="msgSpan" @click="msgInfo(item.content)">{{item.content}}</span>
+              <span>{{item.timeName}}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <!-- 短信详情 -->
+    <v-msg-box v-if="isShowMsgInfo" v-bind:msgData="msgData" v-on:cancle="cancelMsg"></v-msg-box>
+    <!-- 拦阻网 -->
+    <div class="mask" v-if="isShowNet">
+      <div class="more">
+        <div class="popHeader">
+          <h3>拦阻网</h3>
+          <i class="el-icon-close" v-on:click="closeNetFn"></i>
+        </div>
+        <div class="content">
+          <div class="left">
+            <v-net-item v-bind:netLeftData="netLeftData"></v-net-item>
+          </div>
+          <div class="right">
+            <v-net-item v-bind:netLeftData="netRightData"></v-net-item>
+          </div>
+          <div class="bottom">
+            <div class="left">
+              <h3>检查记录</h3>
+              <ul class="checkLog" v-if="netList1.length != 0">
+                <li class="msgLi">
+                  <span>时间</span>
+                  <span>质量状况</span>
+                  <span>立放状态</span>
+                  <span>检查人</span>
+                </li>
+                <li v-for="item in netList1" class="msgLi">
+                  <span>&nbsp;{{item.checkTime}}</span>
+                  <span>{{item.status}}</span>
+                  <span>{{item.currentState}}</span>
+                  <span>{{item.checker}}</span>
+                </li>
+              </ul>
+              <div class="noData" v-else>
+                暂无数据!
+              </div>
+              <el-pagination v-if="netList1.length != 0" class="g-pagination" @current-change="changePages1" :current-page="currentPage1" :total="pageTotal1" background layout="prev, pager, next"></el-pagination>
+            </div>
+            <div class="right">
+              <h3>检查记录</h3>
+              <ul class="checkLog" v-if="netList2.length != 0">
+                <li class="msgLi">
+                  <span>时间</span>
+                  <span>质量状况</span>
+                  <span>立放状态</span>
+                  <span>检查人</span>
+                </li>
+                <li v-for="item in netList2" class="msgLi">
+                  <span>&nbsp;{{item.checkTime}}</span>
+                  <span>{{item.status}}</span>
+                  <span>{{item.currentState}}</span>
+                  <span>{{item.checker}}</span>
+                </li>
+              </ul>
+              <div class="noData" v-else>
+                暂无数据!
+              </div>
+              <el-pagination v-if="netList2.length != 0" class="g-pagination" @current-change="changePages2" :current-page="currentPage2" :total="pageTotal2" background layout="prev, pager, next"></el-pagination>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--飞保-->
+    <div class="mask" v-if="isShowPlane">
+      <div class="listTrajectory">
+        <div class="popHeader">
+          <h3>飞机飞出状态</h3>
+          <i class="el-icon-close" v-on:click="closePlaneFn"></i>
+        </div>
+        <div class="content planContent clearfix" style="border-bottom: 2px solid #3f6794;margin-bottom: 10px;">
+          <div class="to-left" v-on:click="toLeftFn">
+            <div></div>
+          </div>
+          <ul class="plane clearfix">
+            <li class="plane-item" v-for="item in curPlaneTotal">
+              <!-- 参训飞机 -->
+              <div v-if="item.participationStatus == 1">
+                <h2>{{item.tentNum}}</h2>
+                <div v-if="item.planeStatus == ''|| item.planeStatus =='良好'" class="img-wrap">
+                  <img src="../../assets/plane/plane-grey.png" alt="参训">
+                  <span>{{item.planeNum}}</span>
+                </div>
+                <div v-else-if="item.planeStatus == '滑出'" class="img-out">
+                  <h2>滑出</h2>
+                  <span>{{item.planeNum}}</span>
+                </div>
+                <div v-else-if="item.planeStatus == '待检查'" class="img-wrap">
+                  <img src="../../assets/plane/plane-yellow.png" alt="参训">
+                  <span>{{item.planeNum}}</span>
+                </div>
+                <div v-else-if="item.planeStatus == '故障'" class="img-wrap">
+                  <img src="../../assets/plane/plane-red.png" alt="参训">
+                  <span>{{item.planeNum}}</span>
+                </div>
+              </div>
+              <!-- 备份飞机 -->
+              <div v-if="item.participationStatus == 2">
+                <h2>{{item.tentNum}}</h2>
+                <div class="prepare-wrap">
+                  <img v-if="item.planeStatus != '滑出'" src="../../assets/plane/plane-green.png" alt="备选">
+                  <span>{{item.planeNum}}</span>
+                </div>
+              </div>
+              <!-- 未参训飞机 -->
+              <div v-if="item.participationStatus == 3">
+                <h2>{{item.tentNum}}</h2>
+                <div v-if="item.planeNum" class="img-wrap">
+                  <img src="../../assets/plane/plane-grey.png" alt="未参训">
+                  <span>{{item.planeNum}}</span>
+                  <div class="maskNone"></div>
+                </div>
+                <div v-else class="img-none img-wrap"><img class="none" src="../../assets/plane/plane-none.png" alt="未参训"></div>
+                </div>
+            </li>
+          </ul>
+          <div class="to-right" v-on:click="toRightFn">
+            <div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+  import { mapMutations, mapActions } from 'vuex';
+  export default {
+    data() {
+      return {
+        currentPage1: 1,
+        pageSize: 4,
+        pageTotal1: 0,
+        currentPage2: 1,
+        pageTotal2: 0,
+        replayIndex: -1,
+        detailList: [],
+        flightStep: '',
+        voiceList: [],
+        isShowReplay: false,
+        searchData: {
+          'btnShow': [
+            { 'title': '查询', 'fn': 'checkFn' }
+          ],
+          'options': [{
+            'status': 2,
+            'title': '类型',
+            'placeholder': '请选择类型',
+            'val': 'type',
+            'list': [{
+              value: "aud",
+              label: "音频"
+            }, {
+              value: "vid",
+              label: "视频"
+            }]
+          }, {
+            'status': 1,
+            'title': '主叫',
+            'placeholder': '请输入SIP号',
+            'val': 'caller'
+          }, {
+            'status': 1,
+            'title': '被叫',
+            'placeholder': '请输入SIP号',
+            'val': 'callee'
+          }, {
+            'status': 3,
+            'title': '时间',
+            'placeholderS': '请选择开始时间',
+            'placeholderE': '请选择结束时间',
+            'val1': 'startDate',
+            'val2': 'endDate'
+          }]
+        },
+        filterData: {
+          "type": "aud,vid",
+          "caller": "",
+          "callee": "",
+          "startDate": this.util.formatDate('', 2) + ' 00:00:00',
+          "endDate": this.util.formatDate('', 2) + ' 23:59:59'
+        },
+        audioUrl: '',
+        videoUrl: '',
+        //短信
+        isShowMsg: false,
+        searchDataMsg: {
+          'btnShow': [
+            { 'title': '查询', 'fn': 'checkMsgFn' }
+          ],
+          'options': [{
+            'status': 2,
+            'title': '类型',
+            'placeholder': '请选择类型',
+            'val': 'type',
+            'list': [{
+              value: "sms",
+              label: "短信"
+            }]
+          }, {
+            'status': 1,
+            'title': '主叫',
+            'placeholder': '请输入SIP号',
+            'val': 'caller'
+          }, {
+            'status': 1,
+            'title': '被叫',
+            'placeholder': '请输入SIP号',
+            'val': 'callee'
+          }, {
+            'status': 3,
+            'title': '时间',
+            'placeholderS': '请选择开始时间',
+            'placeholderE': '请选择结束时间',
+            'val1': 'startDate',
+            'val2': 'endDate'
+          }]
+        },
+        trajectoryMsg: {
+          'btnShow': [
+            { 'title': '查询', 'fn': 'trajectoryBackFn' }
+          ],
+          'options': [
+            {
+              'status': 5,
+              'title': '人/车',
+              'placeholder': '请选择人员/车辆',
+              'val': 'sip'
+            },
+            {
+              'status': 2,
+              'title': '回放速度',
+              'placeholder': '请选择回放速度',
+              'val': 'speed',
+              'list': [{
+                value: "low",
+                label: "0.5倍速"
+              }, {
+                value: "normal",
+                label: "1倍速"
+              }, {
+                value: "fast",
+                label: "1.5倍速"
+              }]
+            }, {
+              'status': 4,
+              'title': '时间',
+              'placeholderS': '请选择开始时间',
+              'placeholderE': '请选择结束时间',
+              'val1': 'startTime',
+              'val2': 'endTime'
+            }]
+        },
+        msgList: [],
+        isShowMsgInfo: false,
+        msgData: {},
+        filterDataMsg: {
+          "type": "sms",
+          "caller": "",
+          "callee": "",
+          "startDate": this.util.formatDate('', 8) + '000000',
+          "endDate": this.util.formatDate('', 8) + '235959'
+        },
+        isShowTrajectory: false,
+        userList: [],
+        speedArr: [2000, 2000, 2000, 2000, 2000],
+        isShowNet: false,
+        //拦阻网
+        netLeftData: {},
+        netRightData: {},
+        netList1: [],
+        netList2: [],
+        netId1: '',
+        netId2: '',
+        isShowPlane: false,
+        planeTotal: [],
+        curPlaneTotal: []
+      };
+    },
+    props: ['closeShow'],
+    watch: {
+      closeShow() {
+        if(this.closeShow) {
+          this.replayIndex = -1;
+        }
+      }
+    },
+    created() {
+      this.getNetListFn();
+    },
+    methods: {
+      ...mapActions(['_getInfo']),
+      // title点击事
+      curTitleFn(index) {
+        this.replayIndex = index;
+        if(index == 1) {
+          this.getUserFn();
+        } else if(index == 2) {
+          this.getVoiceFn();
+        } else if(index == 3) {
+          this.getMsgFn();
+        } else if(index == 4) {
+          this.getNetFn();
+        } else if(index == 6) {
+          this.getPlaneFn();
+        }
+      },
+      //搜索按钮
+      btnsFn(info) {
+        this[info.fn](info.item);
+      },
+      //获取音频视频
+      getVoiceFn() {
+        this._getInfo({
+          ops: this.filterData,
+          api: 'getHistoryList',
+          callback: res => {
+            this.voiceList = res.data;
+            this.isShowReplay = true;
+          }
+        });
+      },
+      //关闭复盘弹框
+      closeReplayFn() {
+        this.isShowReplay = false;
+        //关闭重新初始化
+        this.filterData = {
+          "type": "aud,vid",
+          "caller": "",
+          "callee": "",
+          "startDate": this.util.formatDate('', 2) + ' 00:00:00',
+          "endDate": this.util.formatDate('', 2) + ' 23:59:59'
+        }
+      },
+      //播放视频或音频
+      getPlayFn(fileUrl) {
+        if(fileUrl.substring(fileUrl.length - 3) == 'wav') {
+          this.audioUrl = 'http://' + window.location.host + '/cmt/user/recorders/view?filePath=' + fileUrl;
+          //   this.audioUrl = 'http://192.168.0.100:81/cmt/user/recorders/view?filePath=' + fileUrl;
+        } else {
+          this.videoUrl = 'http://' + window.location.host + '/cmt/user/recorders/view?filePath=' + fileUrl;
+          //   this.videoUrl = 'http://192.168.0.100:81/cmt/user/recorders/view?filePath=' + fileUrl;
+        }
+      },
+      //关闭音频播放框
+      closeAudioFn() {
+        this.audioUrl = "";
+      },
+      //关闭视频播放框
+      closeVideoFn() {
+        this.videoUrl = "";
+      },
+      //查询按钮
+      checkFn(item) {
+        this.filterData = item;
+        this.getVoiceFn();
+      },
+      //\\\\\\\\\\\\\短信\\\\\\\\\\\\\\\\
+      //获取短信
+      getMsgFn() {
+        this._getInfo({
+          ops: this.filterDataMsg,
+          api: 'getHistoryList',
+          callback: res => {
+            this.msgList = res.data;
+            this.isShowMsg = true;
+          }
+        });
+      },
+      //关闭短信弹框
+      closeMsgFn() {
+        this.isShowMsg = false;
+        //关闭重新初始化
+        this.filterDataMsg = {
+          "type": "sms",
+          "caller": "",
+          "callee": "",
+          "startDate": this.util.formatDate('', 8) + '000000',
+          "endDate": this.util.formatDate('', 8) + '235959'
+        }
+      },
+      //短信查询按钮
+      checkMsgFn(item) {
+        this.filterDataMsg = item;
+        this.getMsgFn();
+      },
+      //获取人员列表
+      getUserFn() {
+        this._getInfo({
+          ops: {},
+          api: 'getPointList',
+          callback: res => {
+            this.userList = res.gpsData
+            this.isShowTrajectory = true;
+            this.$emit('closeLeft')
+          }
+        })
+      },
+      //关闭人员列表
+      closeUserFn() {
+        this.isShowTrajectory = false;
+        this.$emit('closeLeft');
+      },
+      //轨迹回放
+      trajectoryBackFn(itemOps) {
+        var _this = this;
+        this._getInfo({
+          ops: itemOps,
+          api: 'trajectoryBack',
+          callback: res => {
+            if(res == 'null') {
+              return false;
+            }
+            this.isShowTrajectory = true;
+            var arrTrajectory = [];
+            res.forEach((item, index) => {
+              var subArr = [];
+              subArr.push(parseFloat(item.lat), parseFloat(item.lon));
+              arrTrajectory.push(subArr);
+            })
+            this.speedArr = [];
+            if(itemOps.speed == "low") {
+              for(var i = 0; i < arrTrajectory.length; i++) {
+                this.speedArr.push(3000);
+              }
+            } else if(itemOps.speed == "fast") {
+              for(var i = 0; i < arrTrajectory.length; i++) {
+                this.speedArr.push(1000);
+              }
+            } else {
+              for(var i = 0; i < arrTrajectory.length; i++) {
+                this.speedArr.push(2000);
+              }
+            }
+            this.isShowTrajectory = false;
+            if(arrTrajectory.length != 0) {
+              this.mapGlobal.setView(arrTrajectory[0], 16);
+              if(itemOps.type == "ugps") {
+                var myIcon = L.icon({
+                  iconUrl: './static/map/img/people.png',
+                  iconSize: [50, 50]
+                });
+              } else {
+                var myIcon = L.icon({
+                  iconUrl: './static/map/img/car.png',
+                  iconSize: [50, 50]
+                });
+              }
+              var trajectoryObj = this.util.movingMarker(arrTrajectory, this.speedArr, { autostart: true, icon: myIcon }).addTo(this.mapGlobal);
+              var trajectoryLine = L.polyline(arrTrajectory, { color: 'red' }).addTo(this.mapGlobal);
+              trajectoryObj.on('end', function() {
+                console.log('轨迹回放完成');
+                _this.mapGlobal.removeLayer(trajectoryObj);
+                _this.mapGlobal.removeLayer(trajectoryLine);
+              });
+            }
+          }
+        });
+      },
+      //短信详情
+      msgInfo(val) {
+        this.isShowMsgInfo = true;
+        this.msgData = val;
+      },
+      //关闭信息
+      cancelMsg() {
+        this.isShowMsgInfo = false;
+      },
+      //\\\\\\\\\\\\\拦阻网\\\\\\\\\\\\\\\\
+      getNetFn() {
+        this.isShowNet = true;
+      },
+      closeNetFn() {
+        this.isShowNet = false;
+      },
+      getNetListFn() {
+        this._getInfo({
+          ops: {
+            curPage: 1,
+            pageSize: 2
+          },
+          api: 'netList',
+          callback: res => {
+            this.netLeftData = res.rows[0];
+            this.netRightData = res.rows[1];
+            this.netId1 = res.rows[0].id;
+            this.netId2 = res.rows[1].id;
+            this.getRecordFn2();
+          }
+        })
+      },
+      getRecordFn1() {
+        this._getInfo({
+          ops: {
+            "curPage": this.currentPage1,
+            "pageSize": this.pageSize,
+            arresterNetId: this.netId1
+          },
+          api: 'netRecord',
+          callback: res => {
+            this.netList1 = res.rows;
+            this.pageTotal1 = res.records;
+          }
+        })
+      },
+      getRecordFn2() {
+        this._getInfo({
+          ops: {
+            "curPage": this.currentPage2,
+            "pageSize": this.pageSize,
+            arresterNetId: this.netId2
+          },
+          api: 'netRecord',
+          callback: res => {
+            this.netList2 = res.rows;
+            this.pageTotal2 = res.records;
+          }
+        })
+      },
+      //翻页，改变页数方法
+      changePages1(val) {
+        this.currentPage1 = val;
+        this.getRecordFn1();
+      },
+      changePages2(val) {
+        this.currentPage2 = val;
+        this.getRecordFn2();
+      },
+      //\\\\\\\\\\\\\飞保\\\\\\\\\\\\\\\\
+      //获取飞保列表
+      getPlaneFn() {
+        this._getInfo({
+          ops: {},
+          api: 'planeControlList',
+          callback: res => {
+            this.planeTotal = res;
+            this.curPlaneTotal = this.planeTotal.slice(0, 24);
+            this.isShowPlane = true;
+            this.$emit('closeLeft')
+          }
+        })
+      },
+      //上一页
+      toLeftFn() {
+        this.curPlaneTotal = this.planeTotal.slice(0, 24);
+      },
+      //下一页
+      toRightFn() {
+        this.curPlaneTotal = this.planeTotal.slice(24, this.planeTotal.length);
+      },
+      //关闭人员列表
+      closePlaneFn() {
+        this.isShowPlane = false;
+        this.$emit('closeLeft');
+      },
+    }
+  }
+</script>
+
+<style scoped lang="less">
+  .listTrajectory {
+    position: fixed;
+    z-index: 1999;
+    width: 100%;
+    left: 0;
+    bottom: 0;
+    background: linear-gradient(180deg, #5389c4, #5389c4);
+    .popHeader {
+      font-weight: 400;
+      color: rgba(224, 224, 224, 1);
+      text-align: left;
+      font-size: 20px;
+      line-height: 38px;
+      cursor: pointer;
+      z-index: 1001;
+      width: 100%;
+      height: 38px;
+      background: linear-gradient(
+        90deg,
+        rgba(0, 65, 117, 1),
+        rgba(15, 108, 178, 1)
+      );
+      box-shadow: 0px 2px 5px 1px rgba(0, 0, 0, 0.8);
+      position: relative;
+      h3 {
+        display: inline-block;
+        padding-left: 12px;
+      }
+      .el-icon-close {
+        position: absolute;
+        top: 10px;
+        right: 12px;
+      }
+    }
+    .planContent {
+      padding: 0px 20px;
+    }
+    .to-left {
+      width: 50px;
+      float: left;
+      height: 140px;
+      cursor: pointer;
+      margin: 17px 0 10px 0;
+      div {
+        background: url("../../assets/plane/left.png") no-repeat;
+        width: 22px;
+        height: 80px;
+        background-size: 100% 100%;
+        margin: 30px 10px;
+      }
+    }
+    .to-right {
+      width: 50px;
+      height: 140px;
+      float: left;
+      cursor: pointer;
+      margin: 17px 0 10px 0;
+      div {
+        background: url("../../assets/plane/right.png") no-repeat;
+        width: 22px;
+        height: 80px;
+        background-size: 100% 100%;
+        margin: 30px 10px;
+      }
+    }
+    .plane {
+      margin: 17px 0 10px 0;
+      height: 140px;
+      float: left;
+      overflow: hidden;
+      min-width: 1776px;
+      //   width: 100%;
+      .plane-item {
+        width: 70px;
+        float: left;
+        text-align: center;
+        color: #e0e0e0;
+        margin-right: 4px;
+        position: relative;
+        .mask {
+          position: absolute;
+          background: rgba(0, 0, 0, 0.5);
+          top: 25px;
+        }
+        h2 {
+          border: 1px solid #3a6089;
+          font-size: 18px;
+          height: 25px;
+          line-height: 25px;
+        }
+        .prepare-wrap {
+          width: 70px;
+          height: 115px;
+          padding: 5px;
+          background: #3e6793;
+          border: 1px solid #2e4d6d;
+          img {
+            height: 80px;
+          }
+          span {
+            width: 60px;
+          }
+        }
+        .img-wrap {
+          width: 70px;
+          height: 115px;
+          padding: 5px;
+          background: #294462;
+          .maskNone {
+            position: absolute;
+            top: 25px;
+            left: 0;
+            width: 70px;
+            height: 115px;
+            background: rgba(95, 95, 95, 0.5);
+          }
+          img {
+            height: 80px;
+          }
+          span {
+            width: 60px;
+          }
+        }
+        .img-none {
+          height: 115px;
+          line-height: 90px;
+          .none {
+            width: 33px !important;
+            height: 33px !important;
+          }
+        }
+        .img-out {
+          background: url(../../assets/plane/plane-out.png) no-repeat;
+          background-size: 100% 100%;
+          width: 70px;
+          height: 115px;
+          position: relative;
+          h2 {
+            position: absolute;
+            top: 38px;
+            border: none;
+            left: 17px;
+          }
+          span {
+            position: absolute;
+            bottom: 5px;
+            width: 70px;
+            color: #84878d;
+          }
+        }
+        span {
+          display: block;
+          width: 78px;
+          height: 25px;
+        }
+      }
+    }
+  }
+  .isPlayAudio {
+    width: 340px;
+    height: 54px;
+    position: fixed;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    margin: auto;
+    z-index: 200000;
+  }
+  .isPlayVideo {
+    width: 360px;
+    height: 240px;
+    position: fixed;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    margin: auto;
+    z-index: 200000;
+  }
+  .mask {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: 99998;
+    background: rgba(0, 0, 0, 0.5);
+    ul.step {
+      position: fixed;
+      z-index: 99999;
+      width: 420px;
+      height: 320px;
+      left: 0;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      margin: auto;
+      background: #fff;
+      border-radius: 10px;
+      padding-top: 20px;
+      li {
+        line-height: 32px;
+        margin-left: 20px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: block;
+      }
+    }
+    div.more {
+      position: fixed;
+      z-index: 1999;
+      width: 1300px;
+      height: 546px;
+      left: 0;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      margin: auto;
+      background: #fff;
+      border-radius: 10px;
+      .popHeader {
+        font-weight: 400;
+        color: rgba(224, 224, 224, 1);
+        text-align: left;
+        font-size: 20px;
+        line-height: 38px;
+        cursor: pointer;
+        z-index: 1001;
+        width: 1300px;
+        height: 38px;
+        background: linear-gradient(
+          90deg,
+          rgba(0, 65, 117, 1),
+          rgba(15, 108, 178, 1)
+        );
+        box-shadow: 0px 2px 5px 1px rgba(0, 0, 0, 0.8);
+        position: relative;
+        h3 {
+          display: inline-block;
+          padding-left: 12px;
+        }
+        .el-icon-close {
+          position: absolute;
+          top: 10px;
+          right: 12px;
+        }
+      }
+      .content {
+        height: 508px;
+        width: 1300px;
+        background: linear-gradient(
+          180deg,
+          rgba(83, 137, 196, 1),
+          rgba(83, 137, 196, 1)
+        );
+        box-shadow: 1px 2px 5px 1px rgba(0, 0, 0, 0.45);
+        padding: 14px 19px 10px 22px;
+        color: #e0e0e0;
+        .bottom {
+          .left {
+            width: 625px;
+            margin-right: 9px;
+            margin-top: 5px;
+            background: #3a6089;
+            height: 308px;
+            h3 {
+              text-align: center;
+              height: 40px;
+              line-height: 40px;
+            }
+          }
+          .right {
+            width: 625px;
+            background: #3a6089;
+            margin-top: 5px;
+            height: 308px;
+            h3 {
+              text-align: center;
+              height: 40px;
+              line-height: 40px;
+            }
+          }
+          float: left;
+          .checkLog {
+            height: 220px !important;
+            // background: #5289c3 !important;
+            margin-top: 0 !important;
+          }
+          .msgLi {
+            width: 99% !important;
+            margin-left: 3px !important;
+            span:nth-child(1) {
+              width: 40%;
+            }
+            span:nth-child(2),
+            span:nth-child(3) {
+              width: 15%;
+            }
+            span:nth-child(4) {
+              width: 30%;
+            }
+          }
+          .noData {
+            text-align: center;
+            height: 150px;
+            line-height: 150px;
+            font-size: 18px;
+          }
+        }
+      }
+      .msgSpan {
+        cursor: pointer;
+      }
+      ul {
+        height: 410px;
+        overflow-y: auto;
+        background: #3a6089;
+        margin-top: 10px;
+        padding-top: 5px;
+        color: #e0e0e0;
+        font-size: 18px;
+        li {
+          line-height: 32px;
+          margin-left: 20px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          display: block;
+          width: 1153px;
+          background: rgba(255, 255, 255, 0.1);
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          border-radius: 6px 6px 6px 6px;
+          margin-bottom: 7px;
+          span {
+            display: inline-block;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            text-align: center;
+          }
+          span:nth-child(1),
+          span:nth-child(2),
+          span:nth-child(3),
+          span:nth-child(4) {
+            width: 8%;
+          }
+          span:nth-child(5) {
+            width: 40%;
+          }
+          span:nth-child(6) {
+            width: 28%;
+          }
+        }
+        .msgLi {
+          line-height: 32px;
+          margin-left: 20px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          display: block;
+          width: 1153px;
+          background: rgba(255, 255, 255, 0.1);
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          border-radius: 6px 6px 6px 6px;
+          margin-bottom: 7px;
+          span {
+            display: inline-block;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            text-align: center;
+          }
+          span:nth-child(1),
+          span:nth-child(2) {
+            width: 15%;
+          }
+          span:nth-child(3) {
+            width: 40%;
+          }
+          span:nth-child(4) {
+            width: 30%;
+          }
+        }
+      }
+    }
+  }
+  .content .g-pagination {
+    padding: 10px 0 !important;
+  }
+  .audvHeader {
+    font-weight: 400;
+    color: rgba(224, 224, 224, 1);
+    text-align: left;
+    font-size: 20px;
+    line-height: 38px;
+    cursor: pointer;
+    z-index: 1001;
+    width: 100%;
+    height: 38px;
+    background: linear-gradient(
+      90deg,
+      rgba(0, 65, 117, 1),
+      rgba(15, 108, 178, 1)
+    );
+    box-shadow: 0px 2px 5px 1px rgba(0, 0, 0, 0.8);
+    position: relative;
+    h3 {
+      display: inline-block;
+      padding-left: 12px;
+    }
+    .el-icon-close {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+    }
+  }
+  .audioContent {
+    background: #fff;
+  }
+  .videoContent {
+    background: #000;
+  }
+</style>
+<style>
+  .el-picker-panel {
+    z-index: 100001 !important;
+  }
+  .el-select-dropdown {
+    z-index: 100001 !important;
+  }
+</style>

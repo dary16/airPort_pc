@@ -1,0 +1,132 @@
+// 载入皮肤样式库
+@import './skin/newSkin.less';
+// 管理系统布局样式
+// 树形菜单
+.m-menu {
+  &:not(.el-menu--collapse) {
+    width: 260px;
+  }
+}
+// 主路由窗口
+.m-view {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  overflow: auto;
+  &-main {
+    min-width: 1000px;
+    padding: @w-main;
+    overflow: hidden;
+  }
+}
+// 全局布局样式
+.m-manage {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  flex: auto;
+  background-color: @c-bodyBg;
+  &-main {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    transition: all 0.5s ease-in-out;
+    display: flex;
+    flex-direction: row;
+  }
+  &-left {
+    position: relative;
+    transition: all 0.3s ease-in-out;
+    background-color: @c-leftMenu;
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 260px;
+    width: 260px;
+    height: 100%;
+    &.menu-status0 {
+      width: 0;
+      flex: 0;
+    }
+    &.menu-status1 {
+      width: 64px;
+      flex: 0 0 64px;
+    }
+    &.menu-status2 {
+      width: 260px;
+      flex: 0 0 260px;
+    }
+    &-arrow {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      margin: auto;
+      width: 32px;
+      height: 66px;
+      border-radius: 5px 0px 0px 5px;
+      text-align: center;
+      line-height: 66px;
+      background-color: rgba(255, 255, 255, 0.5);
+      font-size: 20px;
+      cursor: pointer;
+    }
+  }
+  //  &-logo{
+  //      height: 32px;
+  //      line-height: 32px;
+  //      background-color: @c-leftMenu;
+  //      border-radius: 6px;
+  //      margin: 16px;
+  //      text-align: center;
+  //      img{
+  //          width: 120px;
+  //          height: 20px;
+  //      }
+  //  }
+}
+
+// 主页面头部
+.m-header {
+  background-color: @c-headerBg;
+  height: 64px;
+  line-height: 64px;
+  padding: 0 @w-head;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  box-shadow: 0 1px 2px #ccc;
+  color: #fff;
+  &-title {
+    font-size: 18px;
+    flex-grow: 2;
+    font-weight: bold;
+  }
+}
+
+// 面包屑
+.m-crumb {
+  padding: @w-main;
+  background-color: #fff;
+  padding: 25px 20px;
+  border-bottom: 1px solid #ddd;
+  .title {
+    font-size: 19px;
+    font-weight: 500;
+    color: #000;
+  }
+}
+.m-side {
+  background-color: #fff;
+  padding: 10px 20px;
+  //  border-bottom: 1px solid #ddd;
+  .el-breadcrumb__item__inner {
+    font-size: 13px;
+    font-weight: 500;
+    color: #333;
+  }
+  .el-breadcrumb__item__inner:last-child {
+    font-weight: 300;
+  }
+}

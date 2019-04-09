@@ -1,0 +1,174 @@
+<template>
+  <div>
+    <div class="mask"></div>
+    <div class="popContent">
+      <div class="popTitle">
+        <h3>预案详情</h3>
+        <i class="el-icon-close" v-on:click="onCancle"></i>
+      </div>
+      <div class="planContent">
+        <el-form ref="form" :model="form" label-width="100px" size="mini">
+          <el-form-item label="预案名称">
+            <el-input v-model="form.planName"></el-input>
+          </el-form-item>
+          <el-form-item label="级别">
+            <el-input v-model="form.planLevel"></el-input>
+          </el-form-item>
+          <el-form-item label="预案详情">
+            <el-input v-model="form.planInfo"></el-input>
+          </el-form-item>
+          <el-form-item label="步骤详情" style="max-height:368px; overflow-y:auto;">
+            <ul class="childListStyle">
+              <li v-for="item in childList">
+                <div class="firstTitle">
+                  <!-- <h2>第{{item.planStep}}步、</h2> -->
+                  <input class="first" v-model="item.planTitle" readonly/>
+                </div>
+                  <div class="subContent" v-if="item.child.length" v-for="(childItem,index) in item.child">
+                    <h3>{{childItem.contentMsg}}</h3>
+                    <input class="left" v-model="childItem.contentInfo" readonly/>
+                    <!-- <input class="left" v-model="childItem.contentMsg" readonly /> -->
+                    <input v-model="childItem.planEquipid" readonly />
+                </div>
+              </li>
+            </ul>
+          </el-form-item>
+        </el-form>
+        <div class="bottomBtns">
+          <el-button size="mini" type="primary" @click="saveFn()">确定</el-button>
+          <el-button size="mini" type="" @click="onCancle">关闭</el-button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+  import { mapState, mapActions } from 'vuex';
+  export default {
+    data() {
+      return {
+        popReq: {},
+        curUser: [],
+        curIndex: 0,
+      };
+    },
+    props: ['form', 'childList'],
+    created() { },
+    methods: {
+      ...mapActions(['_getInfo']),
+      onCancle() {
+        this.$emit('cancelClick', false);
+      },
+      saveFn() {
+        this.$emit('save', this.form);
+      }
+    }
+  };
+</script>
+<style lang="less" scoped>
+  .mask {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1998;
+  }
+  .popContent {
+    position: fixed;
+    background: #fff;
+    width: 622px;
+    left: 50%;
+    margin-left: -311px;
+    top: 20%;
+    z-index: 1999;
+    overflow: hidden;
+    .popTitle {
+      font-weight: 400;
+      color: rgba(224, 224, 224, 1);
+      text-align: left;
+      font-size: 20px;
+      line-height: 38px;
+      cursor: pointer;
+      z-index: 1001;
+      width: 622px;
+      height: 38px;
+      background: linear-gradient(
+        90deg,
+        rgba(0, 65, 117, 1),
+        rgba(15, 108, 178, 1)
+      );
+      box-shadow: 0px 2px 5px 1px rgba(0, 0, 0, 0.8);
+      position: relative;
+      h3 {
+        display: inline-block;
+        padding-left: 12px;
+        font-weight: normal;
+        font-size: 20px;
+      }
+      .el-icon-close {
+        position: absolute;
+        top: 10px;
+        right: 12px;
+        cursor: pointer;
+      }
+    }
+    .planContent {
+      padding: 10px;
+      .childListStyle {
+        color: #333;
+      }
+      ul.childListStyle {
+        li {
+          padding: 10px 5px;
+          color: #333;
+          margin-bottom: 8px;
+          overflow: hidden;
+          .firstTitle {
+            overflow: hidden;
+            h2 {
+              font-size: 16px;
+              float: left;
+              height: 28px;
+              line-height: 28px;
+            }
+            input {
+              float: left;
+              height: 25px;
+              line-height: 25px;
+              font-size: 16px;
+            }
+          }
+          .subContent {
+            overflow: hidden;
+            h3 {
+              font-size: 16px;
+              background: #ccc;
+              text-indent: 1em;
+            }
+            input.left {
+              width: 50%;
+              float: left;
+              height: 28px;
+              line-height: 28px;
+            }
+          }
+        }
+      }
+    }
+  }
+  .bottomBtns {
+    text-align: center;
+    padding-bottom: 10px;
+  }
+</style>
+<style>
+  .planContent .el-form-item {
+    margin-bottom: 0 !important;
+  }
+  .planContent .el-form-item__label {
+    font-weight: normal;
+    font-size: 16px;
+  }
+</style>

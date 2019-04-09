@@ -1,0 +1,380 @@
+<template>
+  <div class="g-userWrap">
+    <v-search-title v-on:receiveBtnFn="btnsFn" v-bind:searchData="searchData"></v-search-title>
+    <div class="g-organize-layout">
+      <div class="g-organize-left">
+        <el-tree :data="treeData" :props="defaultProps" @node-click="handleNodeClick" :default-expand-all="true" :highlight-current="true" :expand-on-click-node="false"></el-tree>
+      </div>
+      <div class="g-organize-main">
+        <el-table :data="roleList" stripe>
+          <el-table-column align="center" prop="orgName" label="部门名称"></el-table-column>
+          <el-table-column align="center" prop="orgCode" label="部门编码"></el-table-column>
+          <!-- <el-table-column align="center" prop="orgPid" label="父部门id"></el-table-column> -->
+          <el-table-column align="center" prop="orgPname" label="父部门名称"></el-table-column>
+          <el-table-column align="center" prop="orgPcode" label="父部门编码"></el-table-column>
+          <!-- <el-table-column align="center" prop="topId" label="顶级部门id"></el-table-column> -->
+          <el-table-column align="center" prop="topCode" label="顶级部门编码"></el-table-column>
+          <el-table-column align="center" prop="topName" label="顶级部门名称"></el-table-column>
+          <el-table-column align="center" prop="orgMobile" label="部门电话"></el-table-column>
+          <!-- <el-table-column align="center" prop="orgLeaderId" label="部门领导id"></el-table-column> -->
+          <el-table-column align="center" prop="orgLeaderName" label="部门领导名称"></el-table-column>
+          <el-table-column align="center" prop="orgRemark" label="备注"></el-table-column>
+          <el-table-column align="center" label="操作" width="120">
+            <template slot-scope="scope">
+              <el-button v-on:click="editFn(scope.row)" type="text" size="small">编辑</el-button>
+              <el-button v-on:click="deleteFn(scope.row.orgId)" type="text" size="small">删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+        <el-pagination class="g-pagination" @current-change="changePages" :current-page="currentPage" :total="pageTotal" background layout="prev, pager, next"></el-pagination>
+      </div>
+    </div>
+    <v-pop-box id="organize" v-dialogDrag v-if="isShowBox" v-on:save="saveFn" v-on:cancle="cancleFn" v-bind:popData="popData" v-on:getBtnFn="getBtnsFn" v-bind:formData="editDate" v-bind:returnDeptsIds="returnDeptsIds"></v-pop-box>
+    <!--获取人员-->
+    <v-get-user v-if="isUser" v-on:checkedUser="getUserList" v-on:closeUserFn="cancelUserListFn"></v-get-user>
+  </div>
+</template>
+
+<script>
+  import { mapActions, mapMutations } from 'vuex';
+  export default {
+    data() {
+      return {
+        isUser: false,
+        treeData: [],
+        defaultProps: {
+          children: 'children',
+          label: 'label'
+        },
+        roleList: [],
+        currentPage: 1,
+        pageSize: 10,
+        pageTotal: 0,
+        searchData: {
+          'btnShow': [
+            { 'title': '查询', 'fn': 'checkFn' },
+            { 'title': '增加', 'fn': 'addRoleFn' }
+          ],
+          'options': [{
+            'status': 1,
+            'title': '部门名称',
+            'placeholder': '请输入部门名称',
+            'val': 'orgName'
+          }],
+          defaultReq: {
+            orgName: '测试默认'
+          }
+        },
+        isShowBox: false,
+        popData: {
+          'titleTotal': '信息',
+          'options': [{
+            'status': 1,
+            'title': '部门名称',
+            'placeholder': '请输入部门名称',
+            'val': 'orgName'
+          }, {
+            'status': 1,
+            'title': '部门编码',
+            'placeholder': '请输入部门编码',
+            'val': 'orgCode'
+          }, {
+            //     'status': 1,
+            //     'title': '父部门id',
+            //     'placeholder': '父部门id',
+            //     'val': 'orgPid'
+            // }, {
+            'status': 1,
+            'title': '父部门名称',
+            'placeholder': '父部门名称',
+            'val': 'orgPname',
+            'disabled': true
+          }, {
+            'status': 1,
+            'title': '父部门编码',
+            'placeholder': '父部门编码',
+            'val': 'orgPcode',
+            'disabled': true
+          }, {
+            //     'status': 1,
+            //     'title': '顶级部门id',
+            //     'placeholder': '顶级部门id',
+            //     'val': 'topId'
+            // }, {
+            'status': 1,
+            'title': '顶级部门编码',
+            'placeholder': '顶级部门编码',
+            'val': 'topCode',
+            'disabled': true
+          }, {
+            'status': 1,
+            'title': '顶级部门名称',
+            'placeholder': '顶级部门名称',
+            'val': 'topName',
+            'disabled': true
+          }, {
+            'status': 1,
+            'title': '部门电话',
+            'placeholder': '部门电话',
+            'val': 'orgMobile'
+          },
+          {
+            'status': 11,
+            'title': '人员',
+            'placeholder': '请选择人员',
+            'val': 'orgLeaderId',
+            'fn': 'getUserFn'
+          },
+
+          //  {
+          //     'status': 1,
+          //     'title': '部门领导id',
+          //     'placeholder': '部门领导id',
+          //     'val': 'orgLeaderId',
+          //     'visible': true
+          // }, {
+          //     'status': 1,
+          //     'title': '部门领导名称',
+          //     'placeholder': '部门领导名称',
+          //     'val': 'orgLeaderName',
+          //     'visible': true
+          // },
+
+
+          {
+            'status': 1,
+            'title': '备注',
+            'placeholder': '备注',
+            'val': 'orgRemark'
+          }]
+        },
+        editDate: {},
+        ops: {},
+        addNodeData: {},
+        orgLists: [],
+        userIds: [],
+        userNames: [],
+        filterVal: {},
+        returnDeptsIds: [],
+        deptsIds: []
+      }
+    },
+    mounted() {
+
+    },
+    created() {
+      this.getOrganizeList();
+      this.getSysOrgFn();
+    },
+    watch: {
+      deptsIds() {
+        if(this.deptsIds.length != 0) {
+          this.returnDeptsIds = JSON.parse(JSON.stringify(this.deptsIds));
+        }
+      }
+    },
+    methods: {
+      ...mapActions(['_getInfo']),
+      ...mapMutations(['_setUserList']),
+      handleNodeClick(data) {
+        this.currentPage = 1;
+        this.getOrganizeList(data.id);
+        this.addNodeData = {
+          'orgPcode': data.code,
+          'orgPid': data.id,
+          'orgPname': data.label,
+          'topId': data.top_id,
+          'topCode': data.top_code,
+          'topName': data.top_name
+        }
+      },
+      //获取组织树
+      getSysOrgFn() {
+        this._getInfo({
+          method: 'get',
+          api: 'getSysOrg',
+          callback: res => {
+            this.treeData = JSON.parse(res.treeData);
+          }
+        });
+      },
+      //获取列表
+      getOrganizeList(id) {
+        let pagination = {
+          "curPage": this.currentPage,
+          "pageSize": this.pageSize
+        };
+
+        if(JSON.stringify(this.filterVal) != '{}' && id) {
+          //暂时未传类似的值
+          this.ops = { ...this.filterVal, ...{ 'orgPid': id }, ...pagination }
+        } else if(JSON.stringify(this.filterVal) != '{}') {
+          this.ops = { ...this.filterVal, ...pagination }
+        } else if(id) {
+          this.ops = { ...{ 'orgPid': id }, ...pagination }
+        } else {
+          this.ops = pagination;
+        }
+
+        this._getInfo({
+          ops: this.ops,
+          api: 'getOrganizeList',
+          callback: res => {
+            this.roleList = res.rows;
+            this.pageTotal = res.records;
+            this.orgLists = [];
+            this.roleList.forEach(item => {
+              this.orgLists.push(item.orgName);
+            });
+          }
+        });
+      },
+      //删除角色
+      deleteFn(id) {
+        this.oMsgBox.confirm('确定删除吗？', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning',
+          closeOnClickModal: false
+        }).then(() => {
+          this._getInfo({
+            ops: {
+              "ids": id,
+            },
+            api: 'deleteOrganize',
+            callback: res => {
+              this.message.success('删除成功！');
+              //列表
+              this.getOrganizeList();
+              //组织树
+              this.getSysOrgFn();
+            }
+          });
+        }).catch(() => {
+
+        });
+      },
+      changeFn(data) {
+        this.editDate = data;
+        this.isShowBox = true;
+      },
+      //编辑角色
+      editFn(val) {
+        console.log(val.orgLeaderName);
+        this.returnDeptsIds.push({ label: val.orgLeaderName });
+        this._getInfo({
+          method: 'post',
+          ops: {
+            "orgId": val.orgPid,
+          },
+          api: 'getTopOrg',
+          callback: res => {
+            val.topCode = res.orgCode;
+            val.topName = res.orgName;
+            this.changeFn(val);
+          }
+        });
+      },
+
+      //搜索按钮
+      btnsFn(info) {
+        this[info.fn](info.item);
+      },
+      //查询按钮
+      checkFn(item) {
+        this.currentPage = 1;
+        item.orgName = this.util.trim(item.orgName);
+        this.filterVal = item;
+        this.getOrganizeList()
+      },
+      //增加按钮
+      addRoleFn() {
+        if(this.treeData.length == 0) {
+          this.addNodeData = {
+            'orgPcode': '0',
+            'orgPid': '0',
+            'orgPname': '0',
+            'topId': '0',
+            'topCode': '0',
+            'topName': '0'
+          }
+        } else if(this.treeData.length && !this.addNodeData.orgPcode) {
+          this.message.error('请选择！')
+          return false;
+        }
+        this.isShowBox = true;
+        this.editDate = this.addNodeData;
+      },
+      //翻页，改变页数方法
+      changePages(val) {
+        this.currentPage = val;
+        this.getOrganizeList();
+      },
+      //弹框保存按钮
+      saveFn(val) {
+        if(this.userIds && this.userIds.length > 1) {
+          this.$message.error('只能选择一个用户！');
+          return false;
+        }
+        val.orgLeaderId = this.userIds.join(',');
+        val.orgLeaderName = this.userNames.join(',');
+        if(val.orgName && val.orgCode && val.orgPcode && val.orgPname && (this.util.trim(val.orgName) !== '') && (this.util.trim(val.orgCode) !== '')) {
+          this.isShowBox = false;
+          this._getInfo({
+            ops: val,
+            api: 'addOrganize',
+            callback: res => {
+              if(val.orgId) {
+                this.message.success('编辑成功！');
+              } else {
+                this.message.success('新增成功！');
+              }
+              this.getOrganizeList();
+              this.getSysOrgFn();
+            }
+          });
+        } else {
+          this.message.error('请填写完整信息！');
+        }
+      },
+      //弹框取消按钮
+      cancleFn(val) {
+        this.isShowBox = val;
+      },
+      //获取用户列表
+      getUserList(list) {
+        this.isUser = false;
+        list.forEach(item => {
+          this.userIds.push(item.id);
+          this.userNames.push(item.label);
+          this.deptsIds.push({ 'id': item.id, 'label': item.label });
+        })
+      },
+      //关闭获取用户列表
+      cancelUserListFn() {
+        this.isUser = false;
+      },
+      //获取子集传来的调用方法
+      getBtnsFn(fn) {
+        this[fn]();
+      },
+      //调用获取部门的方法
+      getUserFn() {
+        //先请求接口，更新数据
+        this._getInfo({
+          method: 'get',
+          api: 'getMailList',
+          callback: res => {
+            this._setUserList(JSON.parse(res.treeData));
+            this.userIds = [];
+            this.userNames = [];
+            this.isUser = true;
+          }
+        });
+      }
+    },
+  };
+</script>
+
+<style scoped lang="less">
+</style>

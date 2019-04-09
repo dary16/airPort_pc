@@ -1,0 +1,378 @@
+<template>
+    <div class="voicePop">
+        <div class="btnAlone w70" v-on:click="voiceCallFn">语音</div>
+        <!--语音通话-->
+        <el-dialog title="语音通话" :visible.sync="dialogVisible" width="30%" :before-close="handleClose" :modal-append-to-body='false'>
+            <!-- <div>{{title}}</div> -->
+            <dl class="voiceConnectShow clearfix">
+                <dd>
+                    <span>发起人</span>
+                    <img src="../../assets/caller.png" />
+                    <span class="name">{{currentSip.userName}}({{currentSip.userSip}})</span>
+                </dd>
+                <dd class="pic">
+                    <img src="../../assets/connect.png" />
+                    <span v-if="isShowCountTime">{{timeCountShow}}</span>
+                </dd>
+                <dd>
+                    <span>接收人</span>
+                    <img src="../../assets/called.png" />
+                    <span class="name" v-for="item in getNewArr" v-bind:class="item.isConnectColor?'colorGreen':'colorWhite'">{{item.label}}({{item.sip}})</span>
+                </dd>
+            </dl>
+            <div slot="footer" class="dialog-footer">
+                <div class="btnAlone" @click="isMicroFn" v-html="micState?'关闭麦克风':'开启麦克风'"></div>
+                <div class="btnAlone" @click="closeVideoFn">结束通话</div>
+            </div>
+        </el-dialog>
+        <!--接收语音通话-->
+        <el-dialog title="语音通话" :visible.sync="voicedVisible" width="30%" :before-close="voicedClose" :modal-append-to-body='false'>
+            <!-- <span>语音通话</span> -->
+            <dl class="voiceConnectShow clearfix">
+                <dd>
+                    <span>发起人</span>
+                    <img src="../../assets/caller.png" />
+                    <span class="name">({{userNameSip}})</span>
+                </dd>
+                <dd>
+                    <img src="../../assets/connect.png" />
+                    <span>{{timeCountShow}}</span>
+                </dd>
+                <dd>
+                    <span>接收人</span>
+                    <img src="../../assets/called.png" />
+                    <span class="name">{{currentSip.userName}}({{currentSip.userSip}})</span>
+                </dd>
+            </dl>
+            <div v-if="isConnect" slot="footer" class="dialog-footer">
+                <div class="btnAlone" @click="answerFn" v-html="str">接听</div>
+                <div class="btnAlone" @click="hangUpFn">挂断</div>
+            </div>
+            <div v-else slot="footer" class="dialog-footer">
+                <div class="btnAlone" @click="isMicroFn" v-html="micState?'关闭麦克风':'开启麦克风'"></div>
+                <div class="btnAlone" @click="transferFn">转接</div>
+                <div class="btnAlone" @click="hangUpFn">关闭</div>
+            </div>
+        </el-dialog>
+        <v-selection-staff v-if="isTransfer" v-bind:isTransfer="isTransfer" v-on:cancel="cancelFn" v-on:confirm="confirmFn"></v-selection-staff>
+    </div>
+</template>
+
+<script>
+    import { mapState, mapMutations } from 'vuex'
+    var h = 0;
+    var m = 0;
+    var s = 0;
+    var timeClear = 0;
+    //定义时，分，秒并初始化为0
+    export default {
+        data() {
+            return {
+                dialogVisible: false,
+                callId: "",
+                micState: true,
+                voicedVisible: false,
+                isConnect: true,
+                str: '接听',
+                isTransfer: false, //是否显示转接框
+                transferData: '', //转接选中的人员callId
+                userNameSip: '',
+                timeCountShow: '00:00:00',
+                isShowCountTime: true,
+                getNewArr: []
+            }
+        },
+        computed: {
+            ...mapState(['callMe', 'checkedArr', 'aloneUserVoiceSip', 'checkedItem', 'currentSip', 'receiveUserName', 'getCallId']),
+        },
+        watch: {
+            callMe() {
+                if(this.callMe.callMe) {
+                    var _this = this;
+                    this.voicedVisible = true;
+                    this.timeCountShow = "00:00:00";
+                    h = m = s = 0;
+                    this.callback.onEventDisconnected = function(callId) {
+                        clearTimeout(timeClear);
+                        _this.voicedVisible = false;
+                        _this.isConnect = true;
+                    }
+                }
+            },
+            aloneUserVoiceSip() {
+                if(this.aloneUserVoiceSip.length != 0) {
+                    this.voiceCallFn();
+                }
+            },
+            receiveUserName() {
+                this.userNameSip = this.receiveUserName;
+            }
+        },
+        created() {
+
+        },
+        methods: {
+            ...mapMutations(['_callMeFn', '_callMeVideoFn']),
+            // 语音通话
+            voiceCallFn() {
+                if(this.checkedArr.length > 1) {
+                    this.isShowCountTime = false;
+                    this.voiceMeetFn(this.checkedArr.join('_'))
+                } else if(this.checkedArr.length == 1) {
+                    this.dialVoicefn(this.checkedArr[0]);
+                } else {
+                    this.message.warning('请在通讯录选择')
+                }
+            },
+            //针对多个用户时候的语音会议
+            voiceMeetFn(sips) {
+                var _this = this;
+                this.getNewArr = JSON.parse(JSON.stringify(this.checkedItem));
+                // this.getNewArr.forEach(item => {
+                //     item.isConnectColor = false
+                // })
+                //拨打语音会议电话
+                this.cmtWsClient.createAudioMeet(sips, 0);
+                this.dialogVisible = true;
+
+                //电话接通状态事件
+                this.callback.onEventConnected = function(code) {
+                    _this.callId = code.callid;
+                    console.log(code, '语音会议呼叫成功')
+                }
+                //成员加入语音会议
+                this.callback.onEventAudioMeetJoin = function(meetId, actionSip, bAdminFlag) {
+                    if(bAdminFlag != 1) {
+                        _this.getNewArr.filter(item => {
+                            if(item.sip == actionSip.split(',')[0]) {
+                                item.isConnectColor = true
+                                _this.$message.info(item.label + '加入了语音会议！');
+                            }
+                        })
+                    }
+                }
+                //成员离开语音会议
+                this.callback.onEventAudioMeetLeave = function(meetId, actionSip) {
+                    _this.getNewArr.filter(item => {
+                        if(item.sip == actionSip) {
+                            item.isConnectColor = false;
+                            _this.$message.info(item.label + '退出了语音会议！')
+                        }
+                    })
+                }
+            },
+
+            //---------------------------------------------呼叫-----------------------------------------------
+            //针对选中一个用户的时候语音通话
+            dialVoicefn(sip) {
+                var _this = this;
+                this.timeCountShow = "00:00:00";
+                h = m = s = 0;
+                //拨打语音电话
+                this.cmtWsClient.makeAudioCall(sip, 0);
+                //处理回调
+                this.dialogVisible = true;
+
+                //电话接通状态事件
+                this.callback.onEventConnected = function(code) {
+                    _this.timerCount()
+                    _this.callId = code.callid;
+                }
+                //对方电话挂断状态事件
+                this.callback.onEventDisconnected = function(code) {
+                    clearTimeout(timeClear);
+                    _this.dialogVisible = false;
+                }
+            },
+            //关闭对话框，并挂断电话
+            handleClose(done) {
+                // if(!this.callId) {
+                this.callId = this.getCallId
+                // }
+                this.$confirm('确认关闭并挂断电话？')
+                    .then(_ => {
+                        this.cmtWsClient.hangUpCall(this.callId)
+                        this.dialogVisible = false;
+                    })
+                    .catch(_ => { });
+            },
+            //开启或者关闭麦克风
+            isMicroFn() {
+                this.cmtWsClient.setMute(this.callId, this.micState);//关闭mic
+                this.micState = !this.micState;
+            },
+            //语音通话，关闭按钮
+            closeVideoFn() {
+                // if(this.getCallId) {
+                this.callId = this.getCallId
+                // }
+                this.cmtWsClient.hangUpCall(this.callId)
+                this.dialogVisible = false;
+            },
+            //---------------------------------------------被呼叫-----------------------------------------------
+            //关闭按钮
+            voicedClose() {
+                this.$confirm('确认关闭并挂断电话？')
+                    .then(_ => {
+                        this.cmtWsClient.hangUpCall(this.callMe.callId)
+                        this.voicedVisible = false;
+                    })
+                    .catch(_ => { });
+            },
+            //接听按钮
+            answerFn() {
+                var _this = this;
+                this.cmtWsClient.answerCall(this.callMe.callId, 0);
+                this.callback.onEventConnected = function(code) {
+                    if(code.type == "audio") {
+                        _this.callId = code.callId;
+                        _this.isConnect = false;
+                        _this.timerCount();
+                    } else if(code.type == "video") {
+                        _this.voicedVisible = false;
+                        _this._callMeVideoFn(true)
+                    }
+                }
+            },
+            //挂断按钮
+            hangUpFn() {
+                this.cmtWsClient.hangUpCall(this.callMe.callId)
+                this.voicedVisible = false;
+                this.isConnect = true;
+            },
+            //转接
+            transferFn() {
+                //弹出选择人员框
+                this.isTransfer = true
+            },
+            //关闭选人员的框
+            cancelFn(val) {
+                this.isTransfer = val;
+            },
+            //关闭选人员框，并取选中人员的值
+            confirmFn(list) {
+                if(list.length > 0) {
+                    this.isTransfer = false;
+                }
+                //获取转接对象的sip号码
+                this.transferData = list[0].sip;
+                //转接callThroughConn(会话id,要转接的对方号码)
+                this.cmtWsClient.callThroughConn(this.callId, this.transferData);
+                //转接完成，关闭当前窗口
+                this.voicedVisible = false;
+            },
+            //计时功能
+            timerCount() {
+                //定义计时函数
+                s = s + 1; //秒
+                if(s >= 60) {
+                    s = 0;
+                    m = m + 1; //分钟
+                }
+                if(m >= 60) {
+                    m = 0;
+                    h = h + 1; //小时
+                }
+                var hour = h < 10 ? '0' + h : h;
+                var min = m < 10 ? '0' + m : m;
+                var second = s < 10 ? '0' + s : s;
+                this.timeCountShow = hour + ':' + min + ':' + second;
+                timeClear = setTimeout(() => {
+                    this.timerCount();
+                }, 1000);
+            }
+        }
+    }
+</script>
+
+<style scoped lang="less">
+    .colorGreen {
+        color: green !important;
+    }
+    .colorWhite {
+        color: #fff !important;
+    }
+    .w70 {
+        width: 70px !important;
+    }
+    .voicePop {
+        .btnAlone {
+            width: auto;
+            line-height: 30px;
+            font-size: 18px;
+            color: #fff;
+            background: linear-gradient(rgba(43, 127, 191, 1), rgba(46, 137, 205, 0.63));
+            box-shadow: 2px 3px 2px #619ee2 inset, 1px 1px 4px rgba(22, 93, 174, 0.8);
+            // margin-right: 15px;
+            text-align: center;
+            border-radius: 8px;
+            padding: 2px 8px;
+            margin: 0 4px;
+            display: inline-block;
+            cursor: pointer;
+        }
+    }
+    .voiceConnectShow {
+        dd {
+            float: left;
+            width: 40%;
+            span {
+                display: block;
+                font-size: 16px;
+                line-height: 40px;
+            }
+            span.name {
+                font-size: 18px;
+                line-height: 30px;
+            }
+        }
+        dd:nth-child(2) {
+            width: 20%;
+            img {
+                margin-top: 50px;
+            }
+            span {
+                display: block;
+                line-height: 36px;
+            }
+            // line-height: 122px;
+        }
+    }
+</style>
+<style>
+    .voicePop .el-dialog__header {
+        padding: 10px 20px;
+        background: linear-gradient(90deg, #004175, #0f6cb2);
+        box-shadow: 0px 2px 5px 1px rgba(0, 0, 0, 0.8);
+    }
+    .voicePop .el-dialog__header .el-dialog__title {
+        color: #e0e0e0;
+        font-size: 20px;
+    }
+    .voicePop .el-dialog__headerbtn {
+        top: 13px;
+    }
+    .voicePop .el-dialog__headerbtn .el-dialog__close {
+        color: #e0e0e0;
+        font-size: 20px;
+    }
+    .voicePop .el-dialog__body {
+        background: #5389c4;
+        box-shadow: 1px 2px 5px 1px rgba(0, 0, 0, 0.45);
+        padding: 11px 16px;
+        color: #e0e0e0;
+        font-size: 18px;
+    }
+    .voicePop .el-dialog__footer {
+        background: #5389c4;
+        border-top: 2px solid #3f6794;
+        padding: 0;
+    }
+    .voicePop .el-dialog__footer div.dialog-footer {
+        display: inline-block;
+        height: 63px;
+        line-height: 63px;
+        width: 100%;
+        text-align: center;
+    }
+</style>

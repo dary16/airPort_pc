@@ -1,0 +1,397 @@
+<template>
+  <div class="g-userWrap">
+    <v-search-title v-on:receiveBtnFn="btnsFn" v-bind:searchData="searchData"></v-search-title>
+    <div class="g-organize-layout">
+      <div class="g-organize-left">
+        <el-tree :data="treeData" :props="defaultProps" @node-click="handleNodeClick" :default-expand-all="true" :highlight-current="true" :expand-on-click-node="false"></el-tree>
+      </div>
+      <div class="g-organize-main">
+        <el-table :data="userList" stripe style="width: 100%;">
+          <el-table-column align="center" prop="userLoginName" label="登陆名称"></el-table-column>
+          <el-table-column align="center" prop="userPwd" label="用户密码"></el-table-column>
+          <el-table-column align="center" prop="userCode" label="用户编号"></el-table-column>
+          <el-table-column align="center" prop="userName" label="用户姓名"></el-table-column>
+          <el-table-column align="center" prop="userMobile" label="电话"></el-table-column>
+          <el-table-column align="center" label="性别">
+            <template slot-scope="scope">
+              {{scope.row.userSex==1?'男':'女'}}
+            </template>
+          </el-table-column>
+          <el-table-column align="center" prop="userEmail" label="邮箱"></el-table-column>
+          <!-- <el-table-column align="center" prop="orgId" label="部门id"></el-table-column>
+                    <el-table-column align="center" prop="orgCode" label="部门code"></el-table-column> -->
+          <el-table-column align="center" prop="orgName" label="部门名称"></el-table-column>
+          <!-- <el-table-column align="center" prop="createUserId" label="创建人id"></el-table-column> -->
+          <el-table-column align="center" prop="createUserName" label="创建人名称"></el-table-column>
+          <el-table-column align="center" prop="createTime" label="创建时间"></el-table-column>
+          <!-- <el-table-column align="center" prop="modifyUserId" label="修改人id"></el-table-column> -->
+          <el-table-column align="center" prop="modifyUserName" label="修改人名称"></el-table-column>
+          <el-table-column align="center" prop="modifyTime" label="修改时间"></el-table-column>
+          <el-table-column align="center" prop="userSip" label="分机号"></el-table-column>
+          <el-table-column align="center" prop="roleName" label="角色"></el-table-column>
+          <el-table-column align="center" prop="userRank" label="军衔"></el-table-column>
+          <!-- <el-table-column align="center" prop="userRank" label="职务"></el-table-column> -->
+          <el-table-column align="center" prop="politicalStatus" label="政治面貌"></el-table-column>
+          <el-table-column align="center" prop="showPlace" label="籍贯"></el-table-column>
+          <el-table-column align="center" prop="joinArmyTime" label="入伍时间"></el-table-column>
+          <el-table-column align="center" prop="userProfession" label="专业"></el-table-column>
+          <el-table-column align="center" label="操作" width="120">
+            <template slot-scope="scope">
+              <el-button v-on:click="editFn(scope.row)" type="text" size="small">编辑</el-button>
+              <el-button v-on:click="deleteFn(scope.row.id)" type="text" size="small">删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+        <el-pagination class="g-pagination" @current-change="changePages" :current-page="currentPage" :total="pageTotal" background layout="prev, pager, next"></el-pagination>
+      </div>
+    </div>
+    <v-pop-box v-dialogDrag v-if="isShowBox" v-on:save="saveFn" v-on:cancle="cancleFn" v-bind:popData="popData" v-bind:formData="editDate"></v-pop-box>
+  </div>
+</template>
+
+<script>
+  import { mapActions } from 'vuex';
+  import { regionData, CodeToText } from 'element-china-area-data';
+  export default {
+    data() {
+      return {
+        treeData: [],
+        defaultProps: {
+          children: 'children',
+          label: 'label'
+        },
+        userList: [],
+        currentPage: 1,
+        pageSize: 10,
+        pageTotal: 0,
+        searchData: {
+          'btnShow': [
+            { 'title': '查询', 'fn': 'checkFn' },
+            { 'title': '增加', 'fn': 'addRoleFn' }
+          ],
+          'options': [{
+            'status': 1,
+            'title': '用户姓名',
+            'placeholder': '请输入用户姓名',
+            'val': 'userName'
+          }],
+          defaultReq: {
+            userName: '测试默认'
+          }
+        },
+        isShowBox: false,
+        popData: {
+          'titleTotal': '信息',
+          'options': [{
+            'status': 1,
+            'title': '登陆名称',
+            'placeholder': '请输入登陆名称',
+            'val': 'userLoginName',
+            'visible': true
+          }, {
+            'status': 7,
+            'title': '用户密码',
+            'placeholder': '请输入用户密码',
+            'val': 'userPwd',
+            'visible': true
+          }, {
+            'status': 1,
+            'title': '用户编号',
+            'placeholder': '请输入用户编号',
+            'val': 'userCode',
+            'visible': true
+          }, {
+            'status': 1,
+            'title': '用户姓名',
+            'placeholder': '请输入用户姓名',
+            'val': 'userName',
+            'visible': true
+          }, {
+            'status': 1,
+            'title': '电话',
+            'placeholder': '请输入电话',
+            'val': 'userMobile',
+            'visible': true
+          }, {
+            'status': 6,
+            'title': '性别',
+            'placeholder': '请输入性别',
+            'val': 'userSex',
+            'list': [{ "value": "1", "label": "男" }, { "value": "0", "label": "女" }]
+          }, {
+            'status': 1,
+            'title': '邮箱',
+            'placeholder': '请输入邮箱',
+            'val': 'userEmail'
+          }, {
+            //     'status': 1,
+            //     'title': '部门id',
+            //     'placeholder': '请输入部门id',
+            //     'val': 'orgId'
+            // }, {
+            // 'status': 1,
+            // 'title': '部门code',
+            // 'placeholder': '请输入部门code',
+            // 'val': 'orgCode',
+            // 'disabled': true
+          }, {
+            'status': 14,
+            'title': '部门名称',
+            'placeholder': '请输入部门名称',
+            'val': 'orgName',
+            'disabled': true,
+            'visible': true
+          }, {
+            'status': 2,
+            'title': '分机号',
+            'placeholder': '请选择分机号',
+            'val': 'userSip',
+            'list': []
+          }, {
+            'status': 8,
+            'title': '角色',
+            'placeholder': '请选择角色',
+            'val': 'roleId',
+            'list': []
+          }, {
+            'status': 12,
+            'title': '军衔',
+            'placeholder': '请选择角色',
+            'val': 'userRank',
+            'list': ['列兵', '上等兵', '下士', '中士', '上士', '少尉', '中尉', '上尉', '大尉']
+            // }, {
+            //   'status': 9,
+            //   'title': '职务',
+            //   'placeholder': '请输入职位信息',
+            //   'val': 'orgName',
+            //   'disabled': true,
+            //   'visible': true
+          }, {
+            'status': 6,
+            'title': '政治面貌',
+            'placeholder': '请选择政治面貌',
+            'val': 'politicalStatus',
+            'list': [{ "value": "党员", "label": "党员" }, { "value": "其他", "label": "其他" }]
+          }, {
+            'status': 13,
+            'title': '籍贯',
+            'placeholder': '请选择籍贯',
+            'val': 'nativePlace'
+          }, {
+            'status': 5,
+            'title': '入伍时间',
+            'placeholder': '请选择入伍时间',
+            'val': 'joinArmyTime',
+            'visible': true
+          }, {
+            'status': 1,
+            'title': '专业',
+            'placeholder': '请输入专业',
+            'val': 'userProfession'
+          }]
+        },
+        editDate: {},
+        ops: {},
+        addNodeData: {},
+        roleList: [],
+        filterVal: {}
+      }
+    },
+    mounted() {
+
+    },
+    created() {
+      this.getUserList();
+      this.getSysOrgFn();
+      //获取角色列表
+      this.getRoleListFn();
+    },
+    watch: {},
+    methods: {
+      ...mapActions(['_getInfo']),
+      handleNodeClick(data) {
+        this.currentPage = 1;
+        this.getUserList(data.id);
+        this.addNodeData = {
+          'orgCode': data.code,
+          'orgId': data.id,
+          'orgName': data.label
+        }
+      },
+      //获取组织树
+      getSysOrgFn() {
+        this._getInfo({
+          method: 'get',
+          api: 'getSysOrg',
+          callback: res => {
+            this.treeData = JSON.parse(res.treeData);
+          }
+        });
+      },
+      //获取列表
+      getUserList(id) {
+        let pagination = {
+          "curPage": this.currentPage,
+          "pageSize": this.pageSize
+        };
+        if(JSON.stringify(this.filterVal) != '{}' && id) {
+          //暂时未传类似的值
+          this.ops = { ...this.filterVal, ...{ 'orgId': id }, ...pagination }
+        } else if(JSON.stringify(this.filterVal) != '{}') {
+          this.ops = { ...this.filterVal, ...pagination }
+        } else if(id) {
+          this.ops = { ...{ 'orgId': id }, ...pagination }
+        } else {
+          this.ops = pagination;
+        }
+        this._getInfo({
+          ops: this.ops,
+          api: 'getUserList',
+          callback: res => {
+            this.userList = res.rows;
+            this.userList.forEach(item => {
+              var arr = [];
+              if(item.nativePlace) {
+                item.nativePlace = item.nativePlace.split(',');
+                item.nativePlace.forEach(subItem => {
+                  arr.push(CodeToText[subItem]);
+                });
+                item.showPlace = arr.join(',');
+              }
+            })
+            this.pageTotal = res.records;
+          }
+        });
+      },
+      //删除角色
+      deleteFn(id) {
+        this.oMsgBox.confirm('确定删除当前用户吗？', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning',
+          closeOnClickModal: false
+        }).then(() => {
+          this._getInfo({
+            ops: {
+              "ids": id,
+            },
+            api: 'deleteUser',
+            callback: res => {
+              this.message.success('删除成功！');
+              this.getUserList();
+            }
+          });
+        }).catch(() => {
+
+        });
+      },
+      //编辑角色
+      editFn(val) {
+        val.roleId = [];
+        if(val.roleName) {
+          val.roleName.split(',').forEach(item => {
+            this.roleList.filter(filItem => {
+              if(item == filItem.label) {
+                val.roleId.push(filItem.value)
+              }
+            })
+          })
+        }
+
+        this.isShowBox = true;
+        this.editDate = val;
+        //获取分机号列表
+        this.getBakListFn();
+      },
+      //搜索按钮
+      btnsFn(info) {
+        this[info.fn](info.item);
+      },
+      //查询按钮
+      checkFn(item) {
+        this.currentPage = 1;
+        item.userName = this.util.trim(item.userName);
+        this.filterVal = item;
+        this.getUserList();
+      },
+      //增加按钮
+      addRoleFn() {
+        this.popData.options[8].disabled = true;
+        if(this.addNodeData.orgId) {
+          //获取分机号列表
+          this.getBakListFn();
+          this.isShowBox = true;
+          this.editDate = this.addNodeData;
+        } else {
+          this.message.error('请先选择');
+          return false;
+        }
+      },
+      //翻页，改变页数方法
+      changePages(val) {
+        this.currentPage = val;
+        this.getUserList();
+      },
+      //弹框保存按钮
+      saveFn(val) {
+        if(val.nativePlace) {
+          val.nativePlace = val.nativePlace.join(',');
+        }
+
+        // val.userRank = val.userRank;
+        if(val.orgName && val.userLoginName && val.userMobile && val.userName && val.userPwd && (val.userSex == 0 || val.userSex == 1) && val.roleId.length !== 0 && val.politicalStatus && val.nativePlace) {
+          val.roleId = val.roleId.join();
+          this.isShowBox = false;
+          this._getInfo({
+            ops: val,
+            api: 'addUser',
+            callback: res => {
+              if(val.userId) {
+                this.message.success('编辑成功！');
+              } else {
+                this.message.success('新增成功！');
+              }
+              this.getUserList();
+            }
+          });
+        } else {
+          this.message.error("请填写完整信息！");
+        }
+      },
+      //弹框取消按钮
+      cancleFn(val) {
+        this.isShowBox = val;
+      },
+      //获取分机号下拉列表
+      getBakListFn() {
+        this._getInfo({
+          api: 'getBaklist',
+          callback: res => {
+            this.popData.options.forEach(item => {
+              if(item.val == 'userSip') {
+                item.list = res.list
+              }
+            })
+          }
+        });
+      },
+      //获取角色下拉列表
+      getRoleListFn() {
+        this._getInfo({
+          api: 'getRolelist',
+          callback: res => {
+            this.roleList = res.list;
+            this.popData.options.forEach(item => {
+              if(item.val == 'roleId') {
+                item.list = res.list;
+              }
+            })
+          }
+        });
+      }
+    },
+  };
+</script>
+
+<style scoped lang="less">
+</style>
